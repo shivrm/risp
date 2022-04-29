@@ -11,6 +11,7 @@ pub enum TokenKind {
     Name,
     OpenParen,
     CloseParen,
+    EOF
 }
 
 pub struct Token {

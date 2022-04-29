@@ -30,7 +30,8 @@ impl<'a> Parser<'a> {
             TokenKind::OpenParen => return self.parse_expr(),
             TokenKind::Number => AstNode::Number(*self.current_token.value.downcast_ref().unwrap()),
             TokenKind::Name => AstNode::Name(self.current_token.value.downcast_ref::<String>().unwrap().clone()),
-            TokenKind::CloseParen => panic!("Atom can not start with closing paren")
+            TokenKind::CloseParen => panic!("Atom can not start with closing paren"),
+            TokenKind::EOF => panic!("Unexpected EOF while reading atom")
         };
         self.advance();
         return node;
@@ -40,7 +41,7 @@ impl<'a> Parser<'a> {
         self.expect(TokenKind::OpenParen);
         
         let mut elements: Vec<AstNode> = Vec::new();
-        while self.current_token.kind != TokenKind::CloseParen {
+        while self.current_token.kind != TokenKind::CloseParen && self.current_token.kind != TokenKind::EOF {
             elements.push(self.parse_expr());
         }
 
@@ -50,10 +51,10 @@ impl<'a> Parser<'a> {
 
     pub fn parse_expr(&mut self) -> AstNode {
         
-        if self.current_token.kind == TokenKind::OpenParen {
-            AstNode::Expr(self.parse_list())
-        } else {
-            self.parse_atom()
+        match self.current_token.kind {
+            TokenKind::OpenParen => AstNode::Expr(self.parse_list()),
+            TokenKind::EOF => panic!("Unexpected EOF while parsing expression"),
+            _ => self.parse_atom()
         }
     }
 }

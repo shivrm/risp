@@ -81,7 +81,10 @@ impl<'a> Lexer<'a> {
                 }
             }
         } else {
-            panic!("EOF")
+            Token {
+                kind: TokenKind::EOF,
+                value: Box::new(0)
+            }
         }
     }
 }
