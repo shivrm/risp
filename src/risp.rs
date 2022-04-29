@@ -1,22 +1,16 @@
-use std::any::Any;
 pub mod lexer;
 pub mod parser;
 
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;
 
-#[derive(PartialEq, Eq, Debug)]
-pub enum TokenKind {
-    Number,
-    Name,
+#[derive(Debug, PartialEq, Eq)]
+pub enum Token {
+    Number(i32),
+    Name(String),
     OpenParen,
     CloseParen,
     EOF
-}
-
-pub struct Token {
-    kind: TokenKind,
-    value: Box<dyn Any>
 }
 
 pub enum AstNode {
