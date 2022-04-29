@@ -25,6 +25,15 @@ impl<'a> Parser<'a> {
         self.advance();
     }
 
+    fn parse_atom(&mut self) -> AstNode {
+        match self.current_token.kind {
+            TokenKind::OpenParen => self.parse_expr(),
+            TokenKind::Number => AstNode::Number(*self.current_token.value.downcast_ref().unwrap()),
+            TokenKind::Name => AstNode::Name(self.current_token.value.downcast_ref::<String>().unwrap().clone()),
+            TokenKind::CloseParen => panic!("Atom can not start with closing paren")
+        }
+    }
+
     fn parse_list(&mut self) -> Vec<AstNode> {
         self.expect(TokenKind::OpenParen);
         
@@ -38,6 +47,11 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expr(&mut self) -> AstNode {
-        todo!();
+        
+        if self.current_token.kind == TokenKind::OpenParen {
+            AstNode::Expr(self.parse_list())
+        } else {
+            self.parse_atom()
+        }
     }
 }

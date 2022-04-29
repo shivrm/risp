@@ -2,7 +2,7 @@ use std::any::Any;
 pub mod lexer;
 pub mod parser;
 
-pub use lexer::Lexer;
+pub use self::lexer::Lexer;
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum TokenKind {
