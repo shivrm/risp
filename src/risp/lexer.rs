@@ -1,7 +1,7 @@
 use std::str::Chars;
 use crate::risp::{Token, TokenKind};
 
-struct Lexer<'a> {
+pub struct Lexer<'a> {
     chars: Chars<'a>
 }
 
