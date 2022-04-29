@@ -15,12 +15,14 @@ pub enum Token {
     EOF
 }
 
+#[derive(Clone)]
 pub enum AstNode {
     Number(i32),
     Name(String),
     Expr(Vec<AstNode>)
 }
 
+#[derive(Clone)]
 pub enum Type {
     Number(i32),
     List(i32),
