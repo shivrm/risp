@@ -1,6 +1,6 @@
 use crate::risp::{Token, AstNode, TokenKind, Lexer};
 
-struct Parser<'a> {
+pub struct Parser<'a> {
     lexer: Lexer<'a>,
     current_token: Token
 }
@@ -26,12 +26,14 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_atom(&mut self) -> AstNode {
-        match self.current_token.kind {
-            TokenKind::OpenParen => self.parse_expr(),
+        let node = match self.current_token.kind {
+            TokenKind::OpenParen => return self.parse_expr(),
             TokenKind::Number => AstNode::Number(*self.current_token.value.downcast_ref().unwrap()),
             TokenKind::Name => AstNode::Name(self.current_token.value.downcast_ref::<String>().unwrap().clone()),
             TokenKind::CloseParen => panic!("Atom can not start with closing paren")
-        }
+        };
+        self.advance();
+        return node;
     }
 
     fn parse_list(&mut self) -> Vec<AstNode> {
@@ -46,7 +48,7 @@ impl<'a> Parser<'a> {
         return elements;
     }
 
-    fn parse_expr(&mut self) -> AstNode {
+    pub fn parse_expr(&mut self) -> AstNode {
         
         if self.current_token.kind == TokenKind::OpenParen {
             AstNode::Expr(self.parse_list())

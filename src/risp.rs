@@ -3,6 +3,7 @@ pub mod lexer;
 pub mod parser;
 
 pub use self::lexer::Lexer;
+pub use self::parser::Parser;
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum TokenKind {

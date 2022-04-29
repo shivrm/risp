@@ -26,6 +26,7 @@ impl<'a> Lexer<'a> {
         let mut num_as_string = String::new();
         while let c @ Some('0'..='9') = self.current_char() {
             num_as_string.push(c.unwrap());
+            self.advance();
         }
 
         num_as_string.parse().unwrap()
@@ -35,6 +36,7 @@ impl<'a> Lexer<'a> {
         let mut num_as_string = String::new();
         while let c @ Some( 'A'..='Z' | 'a'..='z' ) = self.current_char() {
             num_as_string.push(c.unwrap());
+            self.advance();
         }
 
         num_as_string
