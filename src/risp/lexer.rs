@@ -23,11 +23,21 @@ impl<'a> Lexer<'a> {
     }
     
     fn read_number(&mut self) -> i32 {
-        todo!();
+        let mut num_as_string = String::new();
+        while let c @ Some('0'..='9') = self.current_char() {
+            num_as_string.push(c.unwrap());
+        }
+
+        num_as_string.parse().unwrap()
     }
 
     fn read_name(&mut self) -> String {
-        todo!();
+        let mut num_as_string = String::new();
+        while let c @ Some( 'A'..='Z' | 'a'..='z' ) = self.current_char() {
+            num_as_string.push(c.unwrap());
+        }
+
+        num_as_string
     }
 
     pub fn next_token(&mut self) -> Token {
