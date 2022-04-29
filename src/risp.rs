@@ -23,5 +23,7 @@ pub enum AstNode {
 
 pub enum Type {
     Number(i32),
-    BuiltinFn(&'static dyn Fn(Vec<Type>) -> Vec<Type>)
+    List(i32),
+    BuiltinFn(&'static dyn Fn(Vec<Type>) -> Vec<Type>),
+    Null
 }
