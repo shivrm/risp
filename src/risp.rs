@@ -4,7 +4,7 @@ pub mod parser;
 
 pub use lexer::Lexer;
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum TokenKind {
     Number,
     Name,
