@@ -24,4 +24,20 @@ impl<'a> Parser<'a> {
         }
         self.advance();
     }
+
+    fn parse_list(&mut self) -> Vec<AstNode> {
+        self.expect(TokenKind::OpenParen);
+        
+        let mut elements: Vec<AstNode> = Vec::new();
+        while self.current_token.kind != TokenKind::CloseParen {
+            elements.push(self.parse_expr());
+        }
+
+        self.expect(TokenKind::CloseParen);
+        return elements;
+    }
+
+    fn parse_expr(&mut self) -> AstNode {
+        todo!();
+    }
 }
