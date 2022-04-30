@@ -28,6 +28,7 @@ pub enum AstNode {
 #[derive(Clone)]
 pub enum Type {
     Number(i32),
+    List(Vec<Type>),
     BuiltinFn(&'static dyn Fn(Vec<Type>) -> Vec<Type>),
     Null
 }
@@ -37,6 +38,20 @@ impl fmt::Display for Type {
         match self {
             Type::Number(n) => write!(f, "{n}"),
             Type::BuiltinFn(_) => write!(f, "<Builtin Function>"),
+            Type::List(elems) => {
+                let mut iter = elems.iter();
+                
+                match iter.next() {
+                    Some(el) => write!(f, "[{el}")?,
+                    None => write!(f, "[")?
+                }
+
+                for el in iter {
+                    write!(f, ", {el}")?;
+                }
+
+                write!(f, "]")
+            }
             Type::Null => write!(f, "Null")
         }
     }

@@ -23,7 +23,7 @@ impl<'a> Parser<'a> {
     }
 
     fn expect(&mut self, kind: Token) {
-        if variant_eq(&self.current_token, &kind) {
+        if !variant_eq(&self.current_token, &kind) {
             panic!("Expected {:?}, got {:?}", kind, self.current_token);
         }
         self.advance();

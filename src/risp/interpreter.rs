@@ -29,7 +29,15 @@ impl Intepreter {
                                 .collect();
                 
                 match func {
-                    Type::BuiltinFn(f) => f(params)[0].clone(),
+                    Type::BuiltinFn(f) => {
+                        let mut result = f(params).clone();
+
+                        match result.len() {
+                            0 => Type::Null,
+                            1 => result.pop().unwrap(),
+                            _ => Type::List(result)
+                        }
+                    },
                     _ => panic!("function is not callable")
                 }
             }
