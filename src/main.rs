@@ -4,6 +4,7 @@ use std::io::prelude::*;
 mod risp;
 
 fn main() {
+    // Initial greeting
     print!(concat!(
         "risp v0.2.0\n",
         "Type 'bugs' or 'copyright' for more information.\n",
