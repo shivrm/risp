@@ -3,7 +3,7 @@ use ::std::fmt;
 mod lexer;
 mod parser;
 mod interpreter;
-mod std;
+mod rispstd;
 
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;

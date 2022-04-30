@@ -1,4 +1,5 @@
 use crate::risp::{AstNode, Type};
+use crate::risp::rispstd;
 
 pub struct Intepreter {
 }
@@ -9,7 +10,11 @@ impl Intepreter {
     }
 
     fn get_name(&self, name: String) -> Type {
-        todo!();
+        if name == "println" {
+            return Type::BuiltinFn(&rispstd::println)
+        } else {
+            panic!("Unknown function")
+        }
     }
 
     pub fn eval(&self, node: AstNode) -> Type {
