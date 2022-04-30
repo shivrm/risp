@@ -1,63 +1,93 @@
-use crate::risp::{Token, AstNode, Lexer};
+use crate::risp::{Token, AstNode, Lexer, Error};
 
+/// Checks if Enum variants are equal, without comparing the values
 fn variant_eq<T>(a: &T, b: &T) -> bool {
     std::mem::discriminant(a) == std::mem::discriminant(b)
 }
 
+/// Struct which represents a parser, that parses tokens into ASTs
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
     current_token: Token
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(mut lexer: Lexer<'a>) -> Self {
-        Parser {
-            current_token: lexer.next_token(),
+    /// Create a new parser.
+    pub fn new(mut lexer: Lexer<'a>) -> Result<Self, Error> {
+        Ok(Parser {
+            current_token: lexer.next_token()?,
             lexer
-        }
+        })
     }
 
+    /// Advances the parser to the next lexer token
     #[inline]
-    fn advance(&mut self) {
-        self.current_token = self.lexer.next_token();
+    fn advance(&mut self) -> Result<(), Error> {
+        self.current_token = self.lexer.next_token()?;
+        Ok(())
     }
 
-    fn expect(&mut self, kind: Token) {
+    /// Checks if current token is of a specific type, and then advances the parser
+    fn expect(&mut self, kind: Token) -> Result<(), Error> {
         if !variant_eq(&self.current_token, &kind) {
-            panic!("Expected {:?}, got {:?}", kind, self.current_token);
+            return Err(Error {
+                title: "Found wrong token".to_owned(),
+                details: format!("The parser expected {:?}, but found {:?}", kind, self.current_token)
+            })
         }
-        self.advance();
+        self.advance()
     }
 
-    fn parse_atom(&mut self) -> AstNode {
+    /// Parses an atom
+    /// ATOM ::= EXPR | NUMBER | NAME
+    fn parse_atom(&mut self) -> Result<AstNode, Error> {
         let node = match &self.current_token {
+
             Token::OpenParen => return self.parse_expr(),
             Token::Number(value) => AstNode::Number(*value),
             Token::Name(value) => AstNode::Name(value.clone()),
-            Token::CloseParen => panic!("Atom can not start with closing paren"),
-            Token::EOF => panic!("Unexpected EOF while reading atom")
+            
+            Token::CloseParen => return Err(Error {
+                title: "Atom can not start with ')'".to_owned(),
+                details: "The parser detected an atom that started with a closing parenthesis".to_owned()
+            }),
+            
+            Token::EOF => return Err(Error {
+                title: "Unexpected EOF while reading atom".to_owned(),
+                details: "The parser unexpectedly encountered EOF while reading an atom".to_owned()
+            })
         };
-        self.advance();
-        return node;
+        self.advance()?;
+        return Ok(node);
     }
 
-    fn parse_list(&mut self) -> Vec<AstNode> {
-        self.expect(Token::OpenParen);
+    /// Parses a list
+    /// LIST ::= '(' EXPR* ')'
+    fn parse_list(&mut self) -> Result<Vec<AstNode>, Error> {
+        self.expect(Token::OpenParen)?;
         
         let mut elements: Vec<AstNode> = Vec::new();
+
         while self.current_token != Token::CloseParen && self.current_token != Token::EOF {
-            elements.push(self.parse_expr());
+            elements.push(self.parse_expr()?);
         }
 
-        self.expect(Token::CloseParen);
-        return elements;
+        self.expect(Token::CloseParen)?;
+        return Ok(elements);
     }
 
-    pub fn parse_expr(&mut self) -> AstNode {
+    /// Parses an expression
+    /// EXPR ::= LIST | ATOM
+    pub fn parse_expr(&mut self) -> Result<AstNode, Error> {
         
         match self.current_token {
-            Token::OpenParen => AstNode::Expr(self.parse_list()),
-            Token::EOF => panic!("Unexpected EOF while parsing expression"),
+            Token::OpenParen => Ok(AstNode::Expr(self.parse_list()?)),
+
+            Token::EOF => return Err(Error {
+                title: "Unexpected EOF while reading expression".to_owned(),
+                details: "The parser unexpectedly encountered EOF while reading an expression".to_owned()
+            }),
+
             _ => self.parse_atom()
         }
     }

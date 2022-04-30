@@ -7,4 +7,3 @@ edition = "2021"
 description = "Yet another lisp dialect"
 
 [dependencies]
-tracing = "0.1.34"
