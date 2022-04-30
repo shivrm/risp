@@ -27,41 +27,55 @@ impl<'a> Parser<'a> {
         if !variant_eq(&self.current_token, &kind) {
             return Err(Error {
                 title: "Found wrong token".to_owned(),
-                details: format!("The parser expected {}, but found {}", kind, self.current_token)
+                details: format!("The parser expected {:?}, but found {:?}", kind, self.current_token)
             })
         }
         self.advance()
     }
 
-    fn parse_atom(&mut self) -> AstNode {
+    fn parse_atom(&mut self) -> Result<AstNode, Error> {
         let node = match &self.current_token {
+
             Token::OpenParen => return self.parse_expr(),
             Token::Number(value) => AstNode::Number(*value),
             Token::Name(value) => AstNode::Name(value.clone()),
-            Token::CloseParen => panic!("Atom can not start with closing paren"),
-            Token::EOF => panic!("Unexpected EOF while reading atom")
+            
+            Token::CloseParen => return Err(Error {
+                title: "Atom can not start with ')'".to_owned(),
+                details: "The parser detected an atom that started with a closing parenthesis".to_owned()
+            }),
+            
+            Token::EOF => return Err(Error {
+                title: "Unexpected EOF while reading atom".to_owned(),
+                details: "The parser unexpectedly encountered EOF while reading an atom".to_owned()
+            })
         };
-        self.advance();
-        return node;
+        self.advance()?;
+        return Ok(node);
     }
 
-    fn parse_list(&mut self) -> Vec<AstNode> {
-        self.expect(Token::OpenParen);
+    fn parse_list(&mut self) -> Result<Vec<AstNode>, Error> {
+        self.expect(Token::OpenParen)?;
         
         let mut elements: Vec<AstNode> = Vec::new();
         while self.current_token != Token::CloseParen && self.current_token != Token::EOF {
-            elements.push(self.parse_expr());
+            elements.push(self.parse_expr()?);
         }
 
-        self.expect(Token::CloseParen);
-        return elements;
+        self.expect(Token::CloseParen)?;
+        return Ok(elements);
     }
 
-    pub fn parse_expr(&mut self) -> AstNode {
+    pub fn parse_expr(&mut self) -> Result<AstNode, Error> {
         
         match self.current_token {
-            Token::OpenParen => AstNode::Expr(self.parse_list()),
-            Token::EOF => panic!("Unexpected EOF while parsing expression"),
+            Token::OpenParen => Ok(AstNode::Expr(self.parse_list()?)),
+
+            Token::EOF => return Err(Error {
+                title: "Unexpected EOF while reading expression".to_owned(),
+                details: "The parser unexpectedly encountered EOF while reading an expression".to_owned()
+            }),
+
             _ => self.parse_atom()
         }
     }

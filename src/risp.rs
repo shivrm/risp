@@ -9,7 +9,7 @@ pub use self::lexer::Lexer;
 pub use self::parser::Parser;
 pub use self::interpreter::Intepreter;
 
-struct Error {
+pub struct Error {
     title: String,
     details: String
 }
@@ -71,7 +71,7 @@ impl fmt::Display for Type {
 pub fn eval(text: &str) -> Result<Type, Error> {
     let lexer = Lexer::new(text);
     let mut parser = Parser::new(lexer)?;
-    let ast = parser.parse_expr();
+    let ast = parser.parse_expr()?;
     let value = Intepreter::new().eval(ast);
 
     return Ok(value)

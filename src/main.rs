@@ -27,7 +27,10 @@ fn main() {
                 break;
             }
             _ => {
-                println!("{}", risp::eval(&mut line));
+                match risp::eval(&mut line) {
+                    Ok(value) => println!("{value}"),
+                    Err(err) => eprintln!("{err}")
+                }
             }
         }
 
