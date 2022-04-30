@@ -28,8 +28,8 @@ fn main() {
             }
             _ => {
                 match risp::eval(&mut line) {
-                    Ok(value) => println!("{value}"),
-                    Err(err) => eprintln!("{err}")
+                    Ok(value) => println!("\x1b[32m{value}\x1b[0m"),
+                    Err(err) => eprintln!("\x1b[33m{err}\x1b[0m")
                 }
             }
         }

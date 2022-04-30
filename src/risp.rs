@@ -74,5 +74,5 @@ pub fn eval(text: &str) -> Result<Type, Error> {
     let ast = parser.parse_expr()?;
     let value = Intepreter::new().eval(ast);
 
-    return Ok(value)
+    return value
 }

@@ -1,4 +1,4 @@
-use crate::risp::{AstNode, Type};
+use crate::risp::{AstNode, Type, Error};
 use crate::risp::rispstd;
 
 pub struct Intepreter {
@@ -9,36 +9,47 @@ impl Intepreter {
         Intepreter {}
     }
 
-    fn get_name(&self, name: String) -> Type {
+    fn get_name(&self, name: String) -> Result<Type, Error> {
         if name == "println" {
-            return Type::BuiltinFn(&rispstd::println)
+            Ok(Type::BuiltinFn(&rispstd::println))
         } else {
-            panic!("Unknown function")
+            Err(Error {
+                title: format!("Unknown name {name}"),
+                details: "The interpreter could not find the name in the symbol table".to_owned()
+            })
         }
     }
 
-    pub fn eval(&self, node: AstNode) -> Type {
+    pub fn eval(&self, node: AstNode) -> Result<Type, Error> {
         match node {
             AstNode::Name(name) => self.get_name(name),
-            AstNode::Number(num) => Type::Number(num),
+
+            AstNode::Number(num) => Ok(Type::Number(num)),
+            
             AstNode::Expr(mut nodes) => {
-                let func = self.eval(nodes.remove(0));
-                let params: Vec<Type> = nodes
-                                .iter()
-                                .map(|n| self.eval(n.clone()))
-                                .collect();
+                let func = self.eval(nodes.remove(0))?;
+                
+                let mut params = Vec::new();
+                for node in nodes.iter() {
+                    params.push(self.eval(node.clone())?);
+                }
                 
                 match func {
                     Type::BuiltinFn(f) => {
                         let mut result = f(params).clone();
 
-                        match result.len() {
+                        let value = match result.len() {
                             0 => Type::Null,
                             1 => result.pop().unwrap(),
                             _ => Type::List(result)
-                        }
+                        };
+
+                        Ok(value)
                     },
-                    _ => panic!("function is not callable")
+                    _ => Err(Error {
+                        title: "Uncallable function".to_owned(),
+                        details: format!("{func} is not a callable function")
+                    })
                 }
             }
         }
