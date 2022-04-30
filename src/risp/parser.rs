@@ -1,4 +1,4 @@
-use crate::risp::{Token, AstNode, Lexer};
+use crate::risp::{Token, AstNode, Lexer, Error};
 
 fn variant_eq<T>(a: &T, b: &T) -> bool {
     std::mem::discriminant(a) == std::mem::discriminant(b)
@@ -10,23 +10,27 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(mut lexer: Lexer<'a>) -> Self {
-        Parser {
-            current_token: lexer.next_token(),
+    pub fn new(mut lexer: Lexer<'a>) -> Result<Self, Error> {
+        Ok(Parser {
+            current_token: lexer.next_token()?,
             lexer
-        }
+        })
     }
 
     #[inline]
-    fn advance(&mut self) {
-        self.current_token = self.lexer.next_token();
+    fn advance(&mut self) -> Result<(), Error> {
+        self.current_token = self.lexer.next_token()?;
+        Ok(())
     }
 
-    fn expect(&mut self, kind: Token) {
+    fn expect(&mut self, kind: Token) -> Result<(), Error> {
         if !variant_eq(&self.current_token, &kind) {
-            panic!("Expected {:?}, got {:?}", kind, self.current_token);
+            return Err(Error {
+                title: "Found wrong token".to_owned(),
+                details: format!("The parser expected {}, but found {}", kind, self.current_token)
+            })
         }
-        self.advance();
+        self.advance()
     }
 
     fn parse_atom(&mut self) -> AstNode {

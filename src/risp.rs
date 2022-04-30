@@ -68,11 +68,11 @@ impl fmt::Display for Type {
     }
 }
 
-pub fn eval(text: &str) -> Type {
+pub fn eval(text: &str) -> Result<Type, Error> {
     let lexer = Lexer::new(text);
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(lexer)?;
     let ast = parser.parse_expr();
     let value = Intepreter::new().eval(ast);
 
-    return value
+    return Ok(value)
 }
