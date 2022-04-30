@@ -11,6 +11,8 @@ fn main() {
         "Type 'q' or 'quit' to quit\n"
     ));
     
+    let interpreter = risp::Intepreter::new();
+
     loop {
         print!(">>> ");
         io::stdout().flush().expect("Could not flush buffer");
@@ -28,8 +30,15 @@ fn main() {
                 break;
             }
             _ => {
-                match risp::eval(&mut line) {
-                    Ok(value) => println!("\x1b[32m{value}\x1b[0m"),
+                match risp::to_ast(&mut line) {
+                    Ok(ast) => {
+                        let value = interpreter.eval(ast);
+
+                        match value {
+                            Ok(v) => println!("\x1b[32m{v}\x1b[0m"),
+                            Err(err) => eprintln!("\x1b[33m{err}\x1b[0m")
+                        }
+                    },
                     Err(err) => eprintln!("\x1b[33m{err}\x1b[0m")
                 }
             }
