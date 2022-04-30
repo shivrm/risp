@@ -1,4 +1,8 @@
-use crate::risp::{Token, AstNode, TokenKind, Lexer};
+use crate::risp::{Token, AstNode, Lexer};
+
+fn variant_eq<T>(a: &T, b: &T) -> bool {
+    std::mem::discriminant(a) == std::mem::discriminant(b)
+}
 
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
@@ -18,42 +22,42 @@ impl<'a> Parser<'a> {
         self.current_token = self.lexer.next_token();
     }
 
-    fn expect(&mut self, kind: TokenKind) {
-        if self.current_token.kind != kind {
-            panic!("Expected {:?}, got {:?}", kind, self.current_token.kind);
+    fn expect(&mut self, kind: Token) {
+        if !variant_eq(&self.current_token, &kind) {
+            panic!("Expected {:?}, got {:?}", kind, self.current_token);
         }
         self.advance();
     }
 
     fn parse_atom(&mut self) -> AstNode {
-        let node = match self.current_token.kind {
-            TokenKind::OpenParen => return self.parse_expr(),
-            TokenKind::Number => AstNode::Number(*self.current_token.value.downcast_ref().unwrap()),
-            TokenKind::Name => AstNode::Name(self.current_token.value.downcast_ref::<String>().unwrap().clone()),
-            TokenKind::CloseParen => panic!("Atom can not start with closing paren"),
-            TokenKind::EOF => panic!("Unexpected EOF while reading atom")
+        let node = match &self.current_token {
+            Token::OpenParen => return self.parse_expr(),
+            Token::Number(value) => AstNode::Number(*value),
+            Token::Name(value) => AstNode::Name(value.clone()),
+            Token::CloseParen => panic!("Atom can not start with closing paren"),
+            Token::EOF => panic!("Unexpected EOF while reading atom")
         };
         self.advance();
         return node;
     }
 
     fn parse_list(&mut self) -> Vec<AstNode> {
-        self.expect(TokenKind::OpenParen);
+        self.expect(Token::OpenParen);
         
         let mut elements: Vec<AstNode> = Vec::new();
-        while self.current_token.kind != TokenKind::CloseParen && self.current_token.kind != TokenKind::EOF {
+        while self.current_token != Token::CloseParen && self.current_token != Token::EOF {
             elements.push(self.parse_expr());
         }
 
-        self.expect(TokenKind::CloseParen);
+        self.expect(Token::CloseParen);
         return elements;
     }
 
     pub fn parse_expr(&mut self) -> AstNode {
         
-        match self.current_token.kind {
-            TokenKind::OpenParen => AstNode::Expr(self.parse_list()),
-            TokenKind::EOF => panic!("Unexpected EOF while parsing expression"),
+        match self.current_token {
+            Token::OpenParen => AstNode::Expr(self.parse_list()),
+            Token::EOF => panic!("Unexpected EOF while parsing expression"),
             _ => self.parse_atom()
         }
     }

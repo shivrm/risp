@@ -1,5 +1,5 @@
 use std::str::Chars;
-use crate::risp::{Token, TokenKind};
+use crate::risp::Token;
 
 pub struct Lexer<'a> {
     chars: Chars<'a>
@@ -53,38 +53,24 @@ impl<'a> Lexer<'a> {
 
             } else if c.is_numeric() {
                 let value = self.read_number();
-                Token {
-                    kind: TokenKind::Number,
-                    value: Box::new(value)
-                }
+                Token::Number(value)
 
 
             } else if c.is_alphabetic() {
                 let value = self.read_name();
-                Token {
-                    kind: TokenKind::Name,
-                    value: Box::new(value)
-                }
+                Token::Name(value)
 
             // Miscellaneous single-character tokens
             } else {
                 self.advance();
-                let kind = match c {
-                    '(' => TokenKind::OpenParen,
-                    ')' => TokenKind::CloseParen,
+                match c {
+                    '(' => Token::OpenParen,
+                    ')' => Token::CloseParen,
                     _ => panic!("Unknown character {c}")
-                };
-                
-                Token {
-                    kind,
-                    value: Box::new(c)
                 }
             }
         } else {
-            Token {
-                kind: TokenKind::EOF,
-                value: Box::new(0)
-            }
+            Token::EOF
         }
     }
 }
