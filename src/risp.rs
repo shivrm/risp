@@ -9,6 +9,17 @@ pub use self::lexer::Lexer;
 pub use self::parser::Parser;
 pub use self::interpreter::Intepreter;
 
+struct Error {
+    title: String,
+    details: String
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}.\n{}", self.title, self.details)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum Token {
     Number(i32),
