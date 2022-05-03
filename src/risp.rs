@@ -17,8 +17,8 @@ pub enum Error {
     #[error("Unexpected EOF while reading {0}")]
     EOFError(String),
 
-    #[error("Expected {0:?}, found {0:?}")]
-    ExpectError(Token, Token),
+    #[error("Expected {0:?}")]
+    ExpectError(Token),
 
     #[error("Unknown name {0}")]
     NameError(String),

@@ -75,10 +75,7 @@ impl<'a> Lexer<'a> {
                 match c {
                     '(' => Ok(Token::OpenParen),
                     ')' => Ok(Token::CloseParen),
-                    _ => Err(Error {
-                        title: "Unknown character".to_owned(),
-                        details: format!("The lexer does not have a handler for the character '{c}'")
-                    })
+                    _ => Err(Error::LexError(c))
                 }
             }
         } else {
