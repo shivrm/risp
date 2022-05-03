@@ -7,3 +7,4 @@ edition = "2021"
 description = "Yet another lisp dialect"
 
 [dependencies]
+thiserror = "1.0"
