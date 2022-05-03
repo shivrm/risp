@@ -6,7 +6,7 @@ mod risp;
 fn main() {
     // Initial greeting
     print!(concat!(
-        "risp v0.2.0\n",
+        "risp v0.3.0\n",
         "Type 'bugs' or 'copyright' for more information.\n",
         "Type 'q' or 'quit' to quit\n"
     ));
