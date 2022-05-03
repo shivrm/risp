@@ -9,15 +9,23 @@ pub use self::lexer::Lexer;
 pub use self::parser::Parser;
 pub use self::interpreter::Intepreter;
 
-pub struct Error {
-    title: String,
-    details: String
-}
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("Unexpected char {0} while lexing token")]
+    LexError(char),
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}.\n{}", self.title, self.details)
-    }
+    #[error("Unexpected EOF while reading {0}")]
+    EOFError(String),
+
+    #[error("Expected {0:?}")]
+    ExpectError(Token),
+
+    #[error("Unknown name {0}")]
+    NameError(String),
+
+    #[error("{0} is not callable")]
+    CallError(String)
+
 }
 
 #[derive(Debug, PartialEq, Eq)]

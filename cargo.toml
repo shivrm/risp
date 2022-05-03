@@ -1,9 +1,10 @@
 [package]
 name = "risp"
-version = "0.1.0"
+version = "0.3.0"
 authors = ["shivrm"]
 license = "MIT"
 edition = "2021"
 description = "Yet another lisp dialect"
 
 [dependencies]
+thiserror = "1.0"

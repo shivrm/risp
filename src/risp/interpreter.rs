@@ -17,10 +17,7 @@ impl Intepreter {
         if name == "println" {
             Ok(Type::BuiltinFn(&rispstd::println))
         } else {
-            Err(Error {
-                title: format!("Unknown name {name}"),
-                details: "The interpreter could not find the name in the symbol table".to_owned()
-            })
+            Err(Error::NameError(name))
         }
     }
 
@@ -55,10 +52,7 @@ impl Intepreter {
 
                         Ok(value)
                     },
-                    _ => Err(Error {
-                        title: "Uncallable function".to_owned(),
-                        details: format!("{func} is not a callable function")
-                    })
+                    _ => Err(Error::CallError(format!("{func}")))
                 }
             }
         }
