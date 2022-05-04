@@ -14,8 +14,8 @@ pub struct Parser<'a> {
 impl<'a> Parser<'a> {
     /// Create a new parser.
     pub fn new(mut lexer: Lexer<'a>) -> Result<Self, Error> {
-        Ok(Parser {
-            current_token: lexer.next_token()?,
+        Ok(Self {
+            current_token: lexer.next()?,
             lexer
         })
     }
@@ -23,7 +23,7 @@ impl<'a> Parser<'a> {
     /// Advances the parser to the next lexer token
     #[inline]
     fn advance(&mut self) -> Result<(), Error> {
-        self.current_token = self.lexer.next_token()?;
+        self.current_token = self.lexer.next()?;
         Ok(())
     }
 
@@ -40,13 +40,11 @@ impl<'a> Parser<'a> {
     fn parse_atom(&mut self) -> Result<AstNode, Error> {
         let node = match &self.current_token {
 
-            Token::OpenParen => return self.parse_expr(),
             Token::Number(value) => AstNode::Number(*value),
             Token::Name(value) => AstNode::Name(value.clone()),
-            
-            Token::CloseParen => return Err(Error::ExpectError(Token::OpenParen)),
-            
-            Token::EOF => return Err(Error::EOFError("atom".to_owned()))
+                        
+            Token::EOF => return Err(Error::EOFError("atom".to_owned())),
+            t => return Err(Error::Error(format!("Invalid token {t:?} in atom")))
         };
         self.advance()?;
         return Ok(node);
@@ -74,7 +72,7 @@ impl<'a> Parser<'a> {
         match self.current_token {
             Token::OpenParen => Ok(AstNode::Expr(self.parse_list()?)),
 
-            Token::EOF => return Err(Error::EOFError("atom".to_owned())),
+            Token::EOF => return Err(Error::EOFError("expr".to_owned())),
 
             _ => self.parse_atom()
         }

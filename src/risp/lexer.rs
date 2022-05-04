@@ -9,7 +9,7 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
     /// Creates a new lexer
     pub fn new(text: &'a str) -> Self {
-        Lexer {
+        Self {
             chars: text.chars(),
         }
     }
@@ -46,7 +46,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Gets the next token from the text and returns it
-    pub fn next_token(&mut self) -> Result<Token, Error> {
+    pub fn next(&mut self) -> Result<Token, Error> {
         match self.current_char().unwrap_or('\0') {
             
             '\0' => {
@@ -60,7 +60,7 @@ impl<'a> Lexer<'a> {
             // Skip character if it is whitespace
             c if c.is_whitespace() => {
                 self.take_while(|c| c.is_whitespace());
-                self.next_token()
+                self.next()
 
             }
 

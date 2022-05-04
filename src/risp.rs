@@ -24,7 +24,10 @@ pub enum Error {
     NameError(String),
 
     #[error("{0} is not callable")]
-    CallError(String)
+    CallError(String),
+
+    #[error("{0}")]
+    Error(String)
 
 }
 
