@@ -47,22 +47,37 @@ impl<'a> Lexer<'a> {
 
     /// Gets the next token from the text and returns it
     pub fn next_token(&mut self) -> Result<Token, Error> {
-        if let Some(c) = self.current_char() {
+        match self.current_char().unwrap_or('\0') {
+            
+            '\0' => {
+                if self.current_char() == None {
+                    Ok(Token::EOF)
+                } else {
+                    Err(Error::LexError('\0'))
+                }
+            },
+            
             // Skip character if it is whitespace
-            if c.is_whitespace() {
+            c if c.is_whitespace() => {
                 self.take_while(|c| c.is_whitespace());
                 self.next_token()
 
-            } else if c.is_numeric() {
+            }
+
+            c if c.is_numeric() => {
                 let value = self.take_while(|c| c.is_numeric());
                 Ok(Token::Number(value.parse().unwrap()))
             
-            } else if c.is_alphabetic() {
+            } 
+
+            c if c.is_alphabetic() => {
                 let value = self.take_while(|c| c.is_alphabetic());
                 Ok(Token::Name(value))
 
+            }
+            
             // Miscellaneous single-character tokens
-            } else {
+            c => {
                 self.adv();
                 match c {
                     '(' => Ok(Token::OpenParen),
@@ -70,9 +85,6 @@ impl<'a> Lexer<'a> {
                     _ => Err(Error::LexError(c)),
                 }
             }
-        } else {
-            // Character is None, so we are at the end of text
-            Ok(Token::EOF)
         }
     }
 }
