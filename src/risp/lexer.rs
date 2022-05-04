@@ -1,86 +1,90 @@
+use crate::risp::{Error, Token};
 use std::str::Chars;
-use crate::risp::{Token, Error};
 
 /// Struct that represents a lexer, used for producing tokens from a string of text
 pub struct Lexer<'a> {
-    chars: Chars<'a> // Iterator over the characters of the text
+    chars: Chars<'a>, // Iterator over the characters of the text
 }
 
 impl<'a> Lexer<'a> {
     /// Creates a new lexer
     pub fn new(text: &'a str) -> Self {
-        Lexer {
-            chars: text.chars()
+        Self {
+            chars: text.chars(),
+        }
+    }
+
+    /// Takes characters from the lexer while a predicate is met
+    fn take_while(&mut self, mut predicate: impl FnMut(char) -> bool) -> String {
+        let mut taken = String::new();
+
+        loop {
+            // Character iterator is cloned for better performance
+            let mut clone = self.chars.clone();
+
+            match clone.next() {
+                Some(c) if predicate(c) => {
+                    taken.push(c);
+                    self.chars = clone;
+                }
+
+                _ => return taken,
+            }
         }
     }
 
     /// Advances the lexer to the next character
     #[inline]
-    fn advance(&mut self) -> Option<char> {
-        self.chars.next()
+    fn adv(&mut self) {
+        self.chars.next();
     }
-    
+
     /// Returns the current character
     #[inline]
     fn current_char(&self) -> Option<char> {
         self.chars.clone().next()
     }
-    
-    /// Reads a number (consecutive digits) from the text
-    fn read_number(&mut self) -> i32 {
-        let mut num_as_string = String::new();
-
-        while let c @ Some('0'..='9') = self.current_char() {
-            num_as_string.push(c.unwrap());
-            self.advance();
-        }
-
-        num_as_string.parse().unwrap()
-    }
-
-    /// Reads a name (consecutive alphabets) from the text
-    fn read_name(&mut self) -> String {
-        let mut num_as_string = String::new();
-
-        while let c @ Some( 'A'..='Z' | 'a'..='z' ) = self.current_char() {
-            num_as_string.push(c.unwrap());
-            self.advance();
-        }
-
-        num_as_string
-    }
 
     /// Gets the next token from the text and returns it
-    pub fn next_token(&mut self) -> Result<Token, Error> {
-        if let Some(c) = self.current_char() {
+    pub fn next(&mut self) -> Result<Token, Error> {
+        match self.current_char().unwrap_or('\0') {
+            
+            '\0' => {
+                if self.current_char() == None {
+                    Ok(Token::EOF)
+                } else {
+                    Err(Error::LexError('\0'))
+                }
+            },
             
             // Skip character if it is whitespace
-            if c.is_whitespace() {
-                self.advance();
-                self.next_token()
+            c if c.is_whitespace() => {
+                self.take_while(|c| c.is_whitespace());
+                self.next()
 
+            }
 
-            } else if c.is_numeric() {
-                let value = self.read_number();
-                Ok(Token::Number(value))
+            c if c.is_numeric() => {
+                let value = self.take_while(|c| c.is_numeric());
+                Ok(Token::Number(value.parse().unwrap()))
+            
+            } 
 
-
-            } else if c.is_alphabetic() {
-                let value = self.read_name();
+            c if c.is_alphabetic() => {
+                let value = self.take_while(|c| c.is_alphabetic());
                 Ok(Token::Name(value))
 
+            }
+            
             // Miscellaneous single-character tokens
-            } else {
-                self.advance();
+            c => {
+                self.adv();
                 match c {
                     '(' => Ok(Token::OpenParen),
                     ')' => Ok(Token::CloseParen),
-                    _ => Err(Error::LexError(c))
+                    _ => Err(Error::LexError(c)),
                 }
             }
-        } else {
-            // Character is None, so we are at the end of text
-            Ok(Token::EOF)
         }
     }
 }
