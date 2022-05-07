@@ -8,5 +8,5 @@ pub fn println(_in: Vec<Type>) -> Vec<Type> {
 
     print!("\n");
 
-    return Vec::new()
+    return Vec::new();
 }

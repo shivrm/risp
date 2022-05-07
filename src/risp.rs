@@ -1,15 +1,15 @@
 use std::fmt;
 
+mod interpreter;
 mod lexer;
 mod parser;
-mod interpreter;
 mod rispstd;
 mod utils;
 
-pub use self::utils::Span;
+pub use self::interpreter::Intepreter;
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;
-pub use self::interpreter::Intepreter;
+pub use self::utils::Span;
 
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum Error {
@@ -30,7 +30,6 @@ pub enum Error {
 
     #[error("{0}")]
     Error(String),
-
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -45,8 +44,8 @@ pub enum Kind {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Token {
-    pub kind : Kind,
-    pub span : Span,
+    pub kind: Kind,
+    pub span: Span,
 }
 
 #[derive(Clone)]
@@ -74,10 +73,10 @@ impl fmt::Display for Type {
             Type::BuiltinFn(_) => write!(f, "<Builtin Function>"),
             Type::List(elems) => {
                 let mut iter = elems.iter();
-                
+
                 match iter.next() {
                     Some(el) => write!(f, "[{el}")?,
-                    None => write!(f, "[")?
+                    None => write!(f, "[")?,
                 }
 
                 for el in iter {
@@ -85,7 +84,7 @@ impl fmt::Display for Type {
                 }
 
                 write!(f, "]")
-            },
+            }
             Type::Null => write!(f, "Null"),
         }
     }

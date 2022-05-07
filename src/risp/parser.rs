@@ -1,4 +1,4 @@
-use crate::risp::{ Token, Kind, AstNode, Lexer, Error };
+use crate::risp::{AstNode, Error, Kind, Lexer, Token};
 
 /// Checks if Enum variants are equal, without comparing the values
 fn variant_eq<T>(a: &T, b: &T) -> bool {
@@ -7,16 +7,16 @@ fn variant_eq<T>(a: &T, b: &T) -> bool {
 
 /// Struct which represents a parser, that parses tokens into ASTs
 pub struct Parser<'a> {
-    lexer         : Lexer<'a>,
-    current_token : Token,
-    src           : &'a str,
+    lexer: Lexer<'a>,
+    current_token: Token,
+    src: &'a str,
 }
 
 impl<'a> Parser<'a> {
     /// Create a new parser.
     pub fn new(mut lexer: Lexer<'a>, src: &'a str) -> Result<Self, Error> {
         Ok(Self {
-            current_token : lexer.next()?,
+            current_token: lexer.next()?,
             src,
             lexer,
         })
@@ -32,7 +32,7 @@ impl<'a> Parser<'a> {
     /// Checks if current token is of a specific type, and then advances the parser
     fn expect(&mut self, kind: Kind) -> Result<(), Error> {
         if !variant_eq(&self.current_token.kind, &kind) {
-            return Err(Error::ExpectError(kind))
+            return Err(Error::ExpectError(kind));
         }
         self.advance()
     }
@@ -41,16 +41,23 @@ impl<'a> Parser<'a> {
     /// ATOM ::= EXPR | NUMBER | NAME | STRING
     fn parse_atom(&mut self) -> Result<AstNode, Error> {
         let node = match &self.current_token.kind {
-            Kind::Number =>
-            // TODO: Do not use unwrap
-                AstNode::Number((&self.src[self.current_token.span.range()]).parse().unwrap()),
-            
-            Kind::String => AstNode::String((&self.src[self.current_token.span.range()]).to_owned()),
-            Kind::Name   => AstNode::Name(self.src[self.current_token.span.range()].to_owned()),
-            Kind::EOF    => return Err(Error::EOFError("atom".to_owned())),
-            t => return Err(Error::Error(format!("Invalid token {t:?} in atom")))
+            Kind::Number => AstNode::Number(
+                (&self.src[self.current_token.span.range()])
+                    .parse()
+                    .unwrap(),
+            ),
+
+            Kind::String => {
+                AstNode::String((&self.src[self.current_token.span.range()]).to_owned())
+            }
+
+            Kind::Name => AstNode::Name(self.src[self.current_token.span.range()].to_owned()),
+
+            Kind::EOF => return Err(Error::EOFError("atom".to_owned())),
+
+            t => return Err(Error::Error(format!("Invalid token {t:?} in atom"))),
         };
-        
+
         self.advance()?;
         return Ok(node);
     }
@@ -73,11 +80,10 @@ impl<'a> Parser<'a> {
     /// Parses an expression
     /// EXPR ::= LIST | ATOM
     pub fn parse_expr(&mut self) -> Result<AstNode, Error> {
-
         match self.current_token.kind {
             Kind::OpenParen => Ok(AstNode::Expr(self.parse_list()?)),
-            Kind::EOF       => return Err(Error::EOFError("expr".to_owned())),
-            _               => self.parse_atom(),
+            Kind::EOF => return Err(Error::EOFError("expr".to_owned())),
+            _ => self.parse_atom(),
         }
     }
 }

@@ -2,14 +2,14 @@
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Span {
     /// The start location that the span references in the source
-    pub start : usize,
+    pub start: usize,
     /// The end location that the span references in the source
-    pub end   : usize,
+    pub end: usize,
 }
 
 impl Span {
     /// Create a new span
-    pub fn new(start: usize, end: usize) -> Self  {
+    pub fn new(start: usize, end: usize) -> Self {
         Self { start, end }
     }
 
