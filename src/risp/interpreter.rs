@@ -27,6 +27,8 @@ impl Intepreter {
 
             AstNode::Number(num) => Ok(Type::Number(num)),
             
+            AstNode::String(s) => Ok(Type::String(s)),
+
             AstNode::Expr(mut nodes) => {
                 // Expr has function as first argument and rest are params
                 let func = self.eval(nodes.remove(0))?;

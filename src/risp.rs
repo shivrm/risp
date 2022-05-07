@@ -60,6 +60,7 @@ pub enum AstNode {
 #[derive(Clone)]
 pub enum Type {
     Number(i32),
+    String(String),
     List(Vec<Type>),
     BuiltinFn(&'static dyn Fn(Vec<Type>) -> Vec<Type>),
     Null,
@@ -69,6 +70,7 @@ impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Type::Number(n) => write!(f, "{n}"),
+            Type::String(s) => write!(f, "{s}"),
             Type::BuiltinFn(_) => write!(f, "<Builtin Function>"),
             Type::List(elems) => {
                 let mut iter = elems.iter();
