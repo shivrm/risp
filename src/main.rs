@@ -1,6 +1,7 @@
 use std::io;
 use std::io::prelude::*;
 use std::time::{Duration, Instant};
+use crate::risp::Token;
 
 mod risp;
 
@@ -73,12 +74,12 @@ fn lex_speed() {
     
     let bench_fn = || {
         let mut lexer = risp::Lexer::new(src);
-        while !matches!(lexer.next(), Ok(risp::Token::EOF)) {
+        while !matches!(lexer.next(), Ok(Token { kind: risp::Kind::EOF, .. })) {
             /* Benchmark */
         }
     };
 
-    let avg = bench(bench_fn, 5_000, 100);
+    let avg = bench(bench_fn, 500_000, 100);
     
     let bytes_per_sec = (1_000_000_000.0 / avg.as_nanos() as f64) * src.len() as f64;
     let mb  = 1000.0 * 1000.0;
@@ -87,6 +88,8 @@ fn lex_speed() {
 }
 
 fn main() {
+    // TODO: Change this and everything else to how you'd like it
+    // This averages to around ~395 MBps for me, on an i7 6500U running windows
     lex_speed();
     repl();
 }

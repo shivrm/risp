@@ -1,15 +1,14 @@
 use crate::risp::{AstNode, Type, Error};
 use crate::risp::rispstd;
 
-pub struct Intepreter {
-}
+pub struct Intepreter { }
 
 impl Intepreter {
     /// Create a new interpreter
     // This will be useful when interpreter will have default arguments
     // eg. symbol table
     pub fn new() -> Self {
-        Intepreter {}
+        Intepreter { }
     }
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
@@ -17,14 +16,14 @@ impl Intepreter {
         if name == "println" {
             Ok(Type::BuiltinFn(&rispstd::println))
         } else {
-            Err(Error::NameError(name))
+            Err(Error::NameError(name.to_owned()))
         }
     }
 
     /// Evaluates an AST node
     pub fn eval(&self, node: AstNode) -> Result<Type, Error> {
         match node {
-            AstNode::Name(name) => self.get_name(name),
+            AstNode::Name(name) => self.get_name(name.to_owned()),
 
             AstNode::Number(num) => Ok(Type::Number(num)),
             

@@ -1,15 +1,17 @@
-use ::std::fmt;
+use std::fmt;
 
 mod lexer;
 mod parser;
 mod interpreter;
 mod rispstd;
+mod utils;
 
+pub use self::utils::Span;
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;
 pub use self::interpreter::Intepreter;
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Clone)]
 pub enum Error {
     #[error("Unexpected char {0} while lexing token")]
     LexError(char),
@@ -18,7 +20,7 @@ pub enum Error {
     EOFError(String),
 
     #[error("Expected {0:?}")]
-    ExpectError(Token),
+    ExpectError(Kind),
 
     #[error("Unknown name {0}")]
     NameError(String),
@@ -27,24 +29,30 @@ pub enum Error {
     CallError(String),
 
     #[error("{0}")]
-    Error(String)
+    Error(String),
 
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Token {
-    Number(i32),
-    Name(String),
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Kind {
+    Name,
+    Number,
     OpenParen,
     CloseParen,
-    EOF
+    EOF,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Token {
+    pub kind : Kind,
+    pub span : Span,
 }
 
 #[derive(Clone)]
 pub enum AstNode {
     Number(i32),
     Name(String),
-    Expr(Vec<AstNode>)
+    Expr(Vec<AstNode>),
 }
 
 #[derive(Clone)]
@@ -52,7 +60,7 @@ pub enum Type {
     Number(i32),
     List(Vec<Type>),
     BuiltinFn(&'static dyn Fn(Vec<Type>) -> Vec<Type>),
-    Null
+    Null,
 }
 
 impl fmt::Display for Type {
@@ -73,16 +81,13 @@ impl fmt::Display for Type {
                 }
 
                 write!(f, "]")
-            }
-            Type::Null => write!(f, "Null")
+            },
+            Type::Null => write!(f, "Null"),
         }
     }
 }
 
 pub fn to_ast(text: &str) -> Result<AstNode, Error> {
     let lexer = Lexer::new(text);
-    let mut parser = Parser::new(lexer)?;
-    let ast = parser.parse_expr();
-
-    ast
+    Parser::new(lexer, text)?.parse_expr()
 }
