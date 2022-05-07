@@ -22,10 +22,12 @@ impl<'a> Lexer<'a> {
     /// Takes characters from the lexer while a predicate is met
     #[inline]
     fn take_while(&mut self, mut predicate: impl FnMut(char) -> bool) -> Span {
+        let start = self.pos;
+        
         loop {
             // Character iterator is cloned for better performance
             let mut clone = self.chars.clone();
-            let start = self.pos;
+
             match clone.next() {
                 Some(c) if predicate(c) => {
                     self.chars = clone;

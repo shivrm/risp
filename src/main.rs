@@ -90,7 +90,7 @@ fn lex_speed() {
 fn main() {
     // TODO: Change this and everything else to how you'd like it
     // This averages to around ~395 MBps for me, on an i7 6500U running windows
-    lex_speed();
+    // lex_speed();
     repl();
 }
 

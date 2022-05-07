@@ -44,11 +44,11 @@ impl<'a> Parser<'a> {
             Kind::Number =>
             // TODO: Do not use unwrap
                 AstNode::Number((&self.src[self.current_token.span.range()]).parse().unwrap()),
-            // TODO: Somehow get the borrow checker to agree with using `&str` here for better performance
             Kind::Name   => AstNode::Name(self.src[self.current_token.span.range()].to_owned()),
             Kind::EOF    => return Err(Error::EOFError("atom".to_owned())),
             t => return Err(Error::Error(format!("Invalid token {t:?} in atom")))
         };
+        
         self.advance()?;
         return Ok(node);
     }
