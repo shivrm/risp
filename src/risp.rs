@@ -37,6 +37,7 @@ pub enum Error {
 pub enum Kind {
     Name,
     Number,
+    String,
     OpenParen,
     CloseParen,
     EOF,
@@ -52,6 +53,7 @@ pub struct Token {
 pub enum AstNode {
     Number(i32),
     Name(String),
+    String(String),
     Expr(Vec<AstNode>),
 }
 

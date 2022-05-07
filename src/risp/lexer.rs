@@ -85,10 +85,18 @@ impl<'a> Lexer<'a> {
             // Currently matches anything like: abdc_01, __99, _0_9_a, abc, _ etc.
             'a'..='z' | 'A'..='Z' | '_' => {
                 let span =
-                    self.take_while(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '_' | '0'..='9'));
+                self.take_while(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '_' | '0'..='9'));
                 Ok(Token { span, kind: Kind::Name })
             }
             
+            '"' => {
+                self.adv();
+                // TODO: Add support for escape sequences (might need to split this into a seperate fn)
+                let span = self.take_while(|c| !matches!(c, '"'));
+                self.adv();
+                Ok(Token {span, kind: Kind::String})
+            }
+
             // Miscellaneous single-character tokens
             c => {
                 self.adv();

@@ -38,12 +38,14 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses an atom
-    /// ATOM ::= EXPR | NUMBER | NAME
+    /// ATOM ::= EXPR | NUMBER | NAME | STRING
     fn parse_atom(&mut self) -> Result<AstNode, Error> {
         let node = match &self.current_token.kind {
             Kind::Number =>
             // TODO: Do not use unwrap
                 AstNode::Number((&self.src[self.current_token.span.range()]).parse().unwrap()),
+            
+            Kind::String => AstNode::String((&self.src[self.current_token.span.range()]).to_owned()),
             Kind::Name   => AstNode::Name(self.src[self.current_token.span.range()].to_owned()),
             Kind::EOF    => return Err(Error::EOFError("atom".to_owned())),
             t => return Err(Error::Error(format!("Invalid token {t:?} in atom")))
