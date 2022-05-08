@@ -67,7 +67,7 @@ impl Type {
     pub fn repr(&self) -> String {
         match self {
             Type::Number(n) => n.to_string(),
-            Type::String(s) => s.clone(),
+            Type::String(s) => format!("\"{s:?}\""),
 
             Type::List(elems) =>  {
                 let mut iter = elems.iter();
@@ -94,7 +94,7 @@ impl Type {
 
     pub fn display(&self) -> String {
         match self {
-            Type::String(s) => format!("\"{s}\""),
+            Type::String(s) => s.clone(),
             Type::Null => "Null".into(),
             _ => self.repr()
         }
