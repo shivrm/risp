@@ -53,7 +53,7 @@ impl Intepreter {
 
                         Ok(value)
                     }
-                    _ => Err(Error::CallError(format!("{func}"))),
+                    _ => Err(Error::CallError(format!("{}", func.display()))),
                 }
             }
         }

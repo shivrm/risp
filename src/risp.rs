@@ -1,5 +1,3 @@
-use std::fmt;
-
 mod interpreter;
 mod lexer;
 mod parser;
@@ -65,27 +63,40 @@ pub enum Type {
     Null,
 }
 
-impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl Type {
+    pub fn repr(&self) -> String {
         match self {
-            Type::Number(n) => write!(f, "{n}"),
-            Type::String(s) => write!(f, "{s}"),
-            Type::BuiltinFn(_) => write!(f, "<Builtin Function>"),
-            Type::List(elems) => {
+            Type::Number(n) => n.to_string(),
+            Type::String(s) => s.clone(),
+
+            Type::List(elems) =>  {
                 let mut iter = elems.iter();
+                let mut repr = String::from("[");
 
                 match iter.next() {
-                    Some(el) => write!(f, "[{el}")?,
-                    None => write!(f, "[")?,
+                    Some(el) => repr += &el.repr(),
+                    None => (())
                 }
 
                 for el in iter {
-                    write!(f, ", {el}")?;
+                    repr += ", ";
+                    repr += &el.repr();
                 }
 
-                write!(f, "]")
+                repr.push(']');
+                repr
             }
-            Type::Null => write!(f, "Null"),
+
+            Type::BuiltinFn(_) => "<Builtin Function>".to_owned(),
+            Type::Null => "".into()
+        }
+    }
+
+    pub fn display(&self) -> String {
+        match self {
+            Type::String(s) => format!("\"{s}\""),
+            Type::Null => "Null".into(),
+            _ => self.repr()
         }
     }
 }

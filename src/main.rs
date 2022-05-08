@@ -36,7 +36,7 @@ fn repl() {
                     let value = interpreter.eval(ast);
 
                     match value {
-                        Ok(v) => println!("\x1b[32m{v}\x1b[0m"),
+                        Ok(v) => println!("\x1b[32m{}\x1b[0m", v.repr()),
                         Err(err) => eprintln!("\x1b[33m{err}\x1b[0m"),
                     }
                 }
