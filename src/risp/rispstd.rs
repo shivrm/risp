@@ -10,3 +10,13 @@ pub fn println(_in: Vec<Type>) -> Vec<Type> {
 
     return Vec::new();
 }
+
+
+pub fn get_name(name: &str) -> Option<Type> {
+    let value = match name {
+        "println" => Type::BuiltinFn(&println),
+        _ => return None
+    };
+
+    return Some(value)
+}

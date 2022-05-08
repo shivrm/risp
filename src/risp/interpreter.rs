@@ -13,10 +13,9 @@ impl Intepreter {
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     fn get_name(&self, name: String) -> Result<Type, Error> {
-        if name == "println" {
-            Ok(Type::BuiltinFn(&rispstd::println))
-        } else {
-            Err(Error::NameError(name.to_owned()))
+        match rispstd::get_name(&name) {
+            Some(v) => Ok(v),
+            None => Err(Error::NameError(name))
         }
     }
 
