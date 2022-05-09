@@ -1,5 +1,5 @@
-use crate::risp::rispstd;
 use crate::risp::{AstNode, Error, Type};
+extern crate libloading;
 
 pub struct Intepreter {}
 
@@ -13,10 +13,7 @@ impl Intepreter {
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     fn get_name(&self, name: String) -> Result<Type, Error> {
-        match rispstd::get_name(&name) {
-            Some(v) => Ok(v),
-            None => Err(Error::NameError(name))
-        }
+        todo!();
     }
 
     /// Evaluates an AST node

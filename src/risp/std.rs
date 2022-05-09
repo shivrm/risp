@@ -1,4 +1,5 @@
-use crate::risp::Type;
+mod types;
+use types::Type;
 use std::{io, io::prelude::*};
 
 /// Prints values to STDOUT, without a trailing newline
