@@ -3,7 +3,7 @@ pub enum Type {
     Number(i32),
     String(String),
     List(Vec<Type>),
-    BuiltinFn(&'static dyn Fn(Vec<Type>) -> Vec<Type>),
+    BuiltinFn(extern fn(Vec<Type>) -> Vec<Type>),
     Null,
 }
 
@@ -11,7 +11,7 @@ impl Type {
     pub fn repr(&self) -> String {
         match self {
             Type::Number(n) => n.to_string(),
-            Type::String(s) => format!("\"{s:?}\""),
+            Type::String(s) => format!("{s:?}"),
 
             Type::List(elems) =>  {
                 let mut iter = elems.iter();

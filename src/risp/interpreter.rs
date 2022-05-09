@@ -1,19 +1,30 @@
 use crate::risp::{AstNode, Error, Type};
 extern crate libloading;
 
-pub struct Intepreter {}
+use libloading::Symbol;
+
+pub struct Intepreter {
+    stdlib: libloading::Library
+}
 
 impl Intepreter {
     /// Create a new interpreter
     // This will be useful when interpreter will have default arguments
     // eg. symbol table
     pub fn new() -> Self {
-        Intepreter {}
+        unsafe {
+            Intepreter {
+                stdlib: libloading::Library::new("lib/std").unwrap()
+            }
+        }
     }
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     fn get_name(&self, name: String) -> Result<Type, Error> {
-        todo!();
+        unsafe {
+            let symbol: Symbol<extern fn(Vec<Type>) -> Vec<Type>> = self.stdlib.get(name.as_bytes()).unwrap();
+            Ok(Type::BuiltinFn(*symbol))
+        }
     }
 
     /// Evaluates an AST node
