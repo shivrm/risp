@@ -1,7 +1,6 @@
 mod interpreter;
 mod lexer;
 mod parser;
-mod rispstd;
 mod utils;
 
 pub use self::interpreter::Intepreter;

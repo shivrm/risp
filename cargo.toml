@@ -8,3 +8,4 @@ description = "Yet another lisp dialect"
 
 [dependencies]
 thiserror = "1.0"
+libloading = "0.7"
