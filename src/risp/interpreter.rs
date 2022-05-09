@@ -14,7 +14,9 @@ impl Intepreter {
     pub fn new() -> Self {
         unsafe {
             Intepreter {
-                stdlib: libloading::Library::new("lib/std").unwrap()
+                stdlib: libloading::Library::new(
+                    libloading::library_filename("lib/std")
+                ).unwrap()
             }
         }
     }
@@ -22,7 +24,11 @@ impl Intepreter {
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     fn get_name(&self, name: String) -> Result<Type, Error> {
         unsafe {
-            let symbol: Symbol<extern fn(Vec<Type>) -> Vec<Type>> = self.stdlib.get(name.as_bytes()).unwrap();
+            let symbol= match self.stdlib.get(name.as_bytes()) {
+                Ok(s) => s,
+                Err(_) => return Err(Error::NameError(name))
+            };
+
             Ok(Type::BuiltinFn(*symbol))
         }
     }

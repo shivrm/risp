@@ -6,14 +6,14 @@ use std::time::{Duration, Instant};
 mod risp;
 
 fn repl() {
+    let interpreter = risp::Intepreter::new();
+    
     // Initial greeting
     print!(concat!(
         "risp v0.3.0\n",
         "Type 'bugs' or 'copyright' for more information.\n",
         "Type 'q' or 'quit' to quit\n"
     ));
-
-    let interpreter = risp::Intepreter::new();
 
     loop {
         print!(">>> ");

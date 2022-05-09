@@ -17,12 +17,17 @@ git clone https://github.com/shivrm/risp
 cd risp
 ```
 
-3. Build and run with cargo
+3. Build the standard library
+```
+rustc src/risp/std.rs --crate-type dylib --out-dir lib
+```
+
+4. Build and run with cargo
 ```
 cargo run
 ```
 
-4. Enter the statement you want to run in the REPL
+5. Enter the statement you want to run in the REPL
 ```
 >>> 
 ```

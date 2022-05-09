@@ -1,1 +1,0 @@
-rustc src/risp/std.rs --crate-type dylib --out-dir lib
