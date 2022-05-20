@@ -1,8 +1,6 @@
 use crate::risp::{AstNode, Error, Type};
 extern crate libloading;
 
-use libloading::Symbol;
-
 pub struct Intepreter {
     stdlib: libloading::Library
 }
@@ -24,7 +22,7 @@ impl Intepreter {
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     fn get_name(&self, name: String) -> Result<Type, Error> {
         unsafe {
-            let symbol= match self.stdlib.get(name.as_bytes()) {
+            let symbol = match self.stdlib.get(name.as_bytes()) {
                 Ok(s) => s,
                 Err(_) => return Err(Error::NameError(name))
             };
