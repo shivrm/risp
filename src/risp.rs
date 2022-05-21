@@ -8,7 +8,7 @@ pub use self::interpreter::Intepreter;
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;
 pub use self::utils::Span;
-pub use self::types::Type;
+pub use self::types::{ Type, RispPrint };
 
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum Error {

@@ -1,4 +1,4 @@
-use crate::risp::{AstNode, Error, Type};
+use crate::risp::{AstNode, Error, Type, RispPrint };
 extern crate libloading;
 
 pub struct Intepreter {
@@ -27,7 +27,7 @@ impl Intepreter {
                 Err(_) => return Err(Error::NameError(name))
             };
 
-            Ok(Type::BuiltinFn(*symbol))
+            Ok(Type::RustFn(*symbol))
         }
     }
 
@@ -36,9 +36,9 @@ impl Intepreter {
         match node {
             AstNode::Name(name) => self.get_name(name.to_owned()),
 
-            AstNode::Number(num) => Ok(Type::Number(num)),
+            AstNode::Number(num) => Ok(Type::Int(num)),
 
-            AstNode::String(s) => Ok(Type::String(s)),
+            AstNode::String(s) => Ok(Type::Str(s)),
 
             AstNode::Expr(mut nodes) => {
                 // Expr has function as first argument and rest are params
@@ -51,7 +51,7 @@ impl Intepreter {
 
                 // Make sure the function is a callable
                 match func {
-                    Type::BuiltinFn(f) => {
+                    Type::RustFn(f) => {
                         let mut result = f(params).clone();
 
                         // Return Null if nothing was returned, first element if

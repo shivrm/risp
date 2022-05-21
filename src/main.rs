@@ -4,6 +4,7 @@ use std::io::prelude::*;
 use std::time::{Duration, Instant};
 
 mod risp;
+use risp::RispPrint;
 
 fn repl() {
     let interpreter = risp::Intepreter::new();
@@ -103,6 +104,6 @@ fn lex_speed() {
 
 fn main() {
     // TODO: Change this and everything else to how you'd like it
-    lex_speed();
+    // lex_speed();
     repl();
 }
