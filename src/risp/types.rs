@@ -4,6 +4,18 @@ pub type List = Vec<Type>;
 pub type RustFn = fn(List) -> List;
 pub struct Null;
 
+macro_rules! delegate {
+    ($obj:ident, $name:ident, $( $x:expr ),*) => {
+        match $obj {
+            Type::Int(n)    => n.$name($($x)*),
+            Type::Str(s)    => s.$name($($x)*),
+            Type::List(l)   => l.$name($($x)*),
+            Type::RustFn(f) => f.$name($($x)*),
+            Type::Null      => Null.$name($($x)*),
+        }
+    };
+}
+
 #[derive(Clone)]
 pub enum Type {
     Int(Int),
@@ -16,28 +28,36 @@ pub enum Type {
 pub trait RispPrint {
     fn repr(&self) -> String;
     fn display(&self) -> String;
+    fn add(&self, other: Type) -> Option<Type>;
+    fn sub(&self, other: Type) -> Option<Type>;
+    fn mul(&self, other: Type) -> Option<Type>;
+    fn div(&self, other: Type) -> Option<Type>;
 }
 
 // Function definitions could be done by a macro 🤔
 impl RispPrint for Type {
     fn repr(&self) -> String {
-        match self {
-            Type::Int(n)    => n.repr(),
-            Type::Str(s)    => s.repr(),
-            Type::List(l)   => l.repr(),
-            Type::RustFn(f) => f.repr(),
-            Type::Null      => Null.repr(),
-        }
+        delegate!(self, repr,)
     }
 
     fn display(&self) -> String {
-        match self {
-            Type::Int(n)    => n.display(),
-            Type::Str(s)    => s.display(),
-            Type::List(l)   => l.display(),
-            Type::RustFn(f) => f.display(),
-            Type::Null      => Null.display(),
-        }
+        delegate!(self, display,)
+    }
+
+    fn add(&self, other: Type) -> Option<Type> {
+        delegate!(self, add, other)
+    }
+
+    fn sub(&self, other: Type) -> Option<Type> {
+        delegate!(self, sub, other)
+    }
+
+    fn mul(&self, other: Type) -> Option<Type> {
+        delegate!(self, mul, other)
+    }
+
+    fn div(&self, other: Type) -> Option<Type> {
+        delegate!(self, div, other)
     }
 }
 
