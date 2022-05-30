@@ -1,4 +1,4 @@
-use crate::risp::{AstNode, Error, Type, RispPrint };
+use crate::risp::{AstNode, Error, Type, RispType };
 extern crate libloading;
 
 pub struct Intepreter {

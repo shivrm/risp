@@ -4,7 +4,7 @@ use std::io::prelude::*;
 use std::time::{Duration, Instant};
 
 mod risp;
-use risp::RispPrint;
+use risp::RispType;
 
 fn repl() {
     let interpreter = risp::Intepreter::new();

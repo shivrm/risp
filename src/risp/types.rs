@@ -25,17 +25,25 @@ pub enum Type {
     Null,
 }
 
-pub trait RispPrint {
+pub trait RispType {
     fn repr(&self) -> String;
     fn display(&self) -> String;
-    fn add(&self, other: Type) -> Option<Type>;
-    fn sub(&self, other: Type) -> Option<Type>;
-    fn mul(&self, other: Type) -> Option<Type>;
-    fn div(&self, other: Type) -> Option<Type>;
+    fn add(&self, _other: Type) -> Option<Type> {
+        None
+    }
+    fn sub(&self, _other: Type) -> Option<Type> {
+        None
+    }
+    fn mul(&self, _other: Type) -> Option<Type> {
+        None
+    }
+    fn div(&self, _other: Type) -> Option<Type> {
+        None
+    }
 }
 
 // Function definitions could be done by a macro 🤔
-impl RispPrint for Type {
+impl RispType for Type {
     fn repr(&self) -> String {
         delegate!(self, repr,)
     }
@@ -62,7 +70,7 @@ impl RispPrint for Type {
 }
 
 
-impl RispPrint for Int {
+impl RispType for Int {
     fn display(&self) -> String {
         self.to_string()
     }
@@ -70,9 +78,37 @@ impl RispPrint for Int {
     fn repr(&self) -> String {
         self.to_string()
     }
+
+    fn add(&self, other: Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Int(self + n)),
+            _            => None
+        }
+    }
+
+    fn sub(&self, other: Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Int(self - n)),
+            _            => None
+        }
+    }
+
+    fn mul(&self, other: Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Int(self * n)),
+            _            => None
+        }
+    }
+
+    fn div(&self, other: Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Int(self / n)),
+            _            => None
+        }
+    }
 }
 
-impl RispPrint for Str {
+impl RispType for Str {
     fn display(&self) -> String {
         self.clone()
     }
@@ -80,9 +116,25 @@ impl RispPrint for Str {
     fn repr(&self) -> String {
         format!("{self:?}")
     }
+
+    fn add(&self, other: Type) -> Option<Type> {
+        match other {
+            Type::Str(s) => Some(Type::Str(self.clone() + &s)),
+            _            => None
+        }
+
+        
+    }
+
+    fn mul(&self, other: Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Str(self.repeat(n as usize))),
+            _            => None
+        }
+    }
 }
 
-impl RispPrint for List {
+impl RispType for List {
     fn repr(&self) -> String {
         let mut iter = self.iter();
 
@@ -119,9 +171,23 @@ impl RispPrint for List {
 
         result
     }
+
+    fn add(&self, other: Type) -> Option<Type> {
+        match other {
+            Type::List(el) => Some(Type::List(self.iter().cloned().chain(el.iter().cloned()).collect())),
+            _              => None
+        }
+    }
+
+    fn mul(&self, other: Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::List(self.iter().cloned().cycle().take(self.len() * n as usize).collect())),
+            _            => None
+        }
+    }
 }
 
-impl RispPrint for RustFn {
+impl RispType for RustFn {
     fn display(&self) -> String {
         "<Rust Function>".to_owned()
     }
@@ -131,7 +197,7 @@ impl RispPrint for RustFn {
     }
 }
 
-impl RispPrint for Null {
+impl RispType for Null {
     fn display(&self) -> String {
         "Null".to_owned()
     }
