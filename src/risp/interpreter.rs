@@ -1,4 +1,4 @@
-use crate::risp::{AstNode, Error, Type, RispType };
+use crate::risp::{AstNode, Error, Type, RispType, Op};
 extern crate libloading;
 
 pub struct Intepreter {
@@ -66,6 +66,24 @@ impl Intepreter {
 
                         Ok(value)
                     }
+
+                    Type::Operator(op) => {
+                        let left = params.remove(0);
+                        let right = params.remove(0);
+
+                        let res = match op {
+                            Op::Plus => left.add(right),
+                            Op::Minus => left.sub(right),
+                            Op::Star => left.mul(right),
+                            Op::Slash => left.div(right)
+                        };
+
+                        match res {
+                            Some(v) => Ok(v),
+                            None => Err(Error::OpError(left.display(), op.display()))
+                        }
+                    }
+
                     _ => Err(Error::CallError(format!("{}", func.display()))),
                 }
             }

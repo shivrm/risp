@@ -27,6 +27,9 @@ pub enum Error {
     #[error("{0} is not callable")]
     CallError(String),
 
+    #[error("{0} does not implement {1}")]
+    OpError(String, String),
+
     #[error("{0}")]
     Error(String),
 }
