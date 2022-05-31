@@ -121,9 +121,7 @@ impl RispType for Str {
         match other {
             Type::Str(s) => Some(Type::Str(self.clone() + &s)),
             _            => None
-        }
-
-        
+        }   
     }
 
     fn mul(&self, other: Type) -> Option<Type> {

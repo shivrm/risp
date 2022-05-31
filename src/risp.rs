@@ -38,6 +38,7 @@ pub enum Kind {
     String,
     OpenParen,
     CloseParen,
+    Operator,
     EOF,
 }
 
@@ -47,11 +48,20 @@ pub struct Token {
     pub span: Span,
 }
 
+#[derive(Clone, Copy)]
+pub enum Op {
+    Plus,
+    Minus,
+    Star,
+    Slash
+}
+
 #[derive(Clone)]
 pub enum AstNode {
     Number(i32),
     Name(String),
     String(String),
+    Operator(Op),
     Expr(Vec<AstNode>),
 }
 

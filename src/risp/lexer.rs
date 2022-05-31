@@ -110,6 +110,7 @@ impl<'a> Lexer<'a> {
                 let kind = match c {
                     '(' => Kind::OpenParen,
                     ')' => Kind::CloseParen,
+                    '+' | '-' | '*' | '/' => Kind::Operator,
                     _ => return Err(Error::LexError(c)),
                 };
 
