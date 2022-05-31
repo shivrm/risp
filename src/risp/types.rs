@@ -38,16 +38,28 @@ pub enum Type {
 pub trait RispType {
     fn repr(&self) -> String;
     fn display(&self) -> String;
-    fn add(&self, _other: Type) -> Option<Type> {
+    fn add(&self, _other: &Type) -> Option<Type> {
         None
     }
-    fn sub(&self, _other: Type) -> Option<Type> {
+    fn sub(&self, _other: &Type) -> Option<Type> {
         None
     }
-    fn mul(&self, _other: Type) -> Option<Type> {
+    fn mul(&self, _other: &Type) -> Option<Type> {
         None
     }
-    fn div(&self, _other: Type) -> Option<Type> {
+    fn div(&self, _other: &Type) -> Option<Type> {
+        None
+    }
+    fn radd(&self, _other: &Type) -> Option<Type> {
+        None
+    }
+    fn rsub(&self, _other: &Type) -> Option<Type> {
+        None
+    }
+    fn rmul(&self, _other: &Type) -> Option<Type> {
+        None
+    }
+    fn rdiv(&self, _other: &Type) -> Option<Type> {
         None
     }
 }
@@ -62,19 +74,35 @@ impl RispType for Type {
         delegate!(self, display,)
     }
 
-    fn add(&self, other: Type) -> Option<Type> {
+    fn add(&self, other: &Type) -> Option<Type> {
         delegate!(self, add, other)
     }
 
-    fn sub(&self, other: Type) -> Option<Type> {
+    fn sub(&self, other: &Type) -> Option<Type> {
         delegate!(self, sub, other)
     }
 
-    fn mul(&self, other: Type) -> Option<Type> {
+    fn mul(&self, other: &Type) -> Option<Type> {
         delegate!(self, mul, other)
     }
 
-    fn div(&self, other: Type) -> Option<Type> {
+    fn div(&self, other: &Type) -> Option<Type> {
+        delegate!(self, div, other)
+    }
+
+    fn radd(&self, other: &Type) -> Option<Type> {
+        delegate!(self, add, other)
+    }
+
+    fn rsub(&self, other: &Type) -> Option<Type> {
+        delegate!(self, sub, other)
+    }
+
+    fn rmul(&self, other: &Type) -> Option<Type> {
+        delegate!(self, mul, other)
+    }
+
+    fn rdiv(&self, other: &Type) -> Option<Type> {
         delegate!(self, div, other)
     }
 }
@@ -89,28 +117,28 @@ impl RispType for Int {
         self.to_string()
     }
 
-    fn add(&self, other: Type) -> Option<Type> {
+    fn add(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self + n)),
             _            => None
         }
     }
 
-    fn sub(&self, other: Type) -> Option<Type> {
+    fn sub(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self - n)),
             _            => None
         }
     }
 
-    fn mul(&self, other: Type) -> Option<Type> {
+    fn mul(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self * n)),
             _            => None
         }
     }
 
-    fn div(&self, other: Type) -> Option<Type> {
+    fn div(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self / n)),
             _            => None
@@ -127,16 +155,23 @@ impl RispType for Str {
         format!("{self:?}")
     }
 
-    fn add(&self, other: Type) -> Option<Type> {
+    fn add(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Str(s) => Some(Type::Str(self.clone() + &s)),
             _            => None
         }   
     }
 
-    fn mul(&self, other: Type) -> Option<Type> {
+    fn mul(&self, other: &Type) -> Option<Type> {
         match other {
-            Type::Int(n) => Some(Type::Str(self.repeat(n as usize))),
+            Type::Int(n) => Some(Type::Str(self.repeat(*n as usize))),
+            _            => None
+        }
+    }
+
+    fn rmul(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Str(self.repeat(*n as usize))),
             _            => None
         }
     }
@@ -180,16 +215,23 @@ impl RispType for List {
         result
     }
 
-    fn add(&self, other: Type) -> Option<Type> {
+    fn add(&self, other: &Type) -> Option<Type> {
         match other {
             Type::List(el) => Some(Type::List(self.iter().cloned().chain(el.iter().cloned()).collect())),
             _              => None
         }
     }
 
-    fn mul(&self, other: Type) -> Option<Type> {
+    fn mul(&self, other: &Type) -> Option<Type> {
         match other {
-            Type::Int(n) => Some(Type::List(self.iter().cloned().cycle().take(self.len() * n as usize).collect())),
+            Type::Int(n) => Some(Type::List(self.iter().cloned().cycle().take(self.len() * *n as usize).collect())),
+            _            => None
+        }
+    }
+
+    fn rmul(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::List(self.iter().cloned().cycle().take(self.len() * *n as usize).collect())),
             _            => None
         }
     }

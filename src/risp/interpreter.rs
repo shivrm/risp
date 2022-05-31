@@ -72,16 +72,28 @@ impl Intepreter {
                         let right = params.remove(0);
 
                         let res = match op {
-                            Op::Plus => left.add(right),
-                            Op::Minus => left.sub(right),
-                            Op::Star => left.mul(right),
-                            Op::Slash => left.div(right)
+                            Op::Plus => left.add(&right),
+                            Op::Minus => left.sub(&right),
+                            Op::Star => left.mul(&right),
+                            Op::Slash => left.div(&right)
+                        };
+
+                        if let Some(v) = res {
+                            return Ok(v)
+                        }
+
+                        let res = match op {
+                            Op::Plus => right.radd(&left),
+                            Op::Minus => right.rsub(&left),
+                            Op::Star => right.rmul(&left),
+                            Op::Slash => right.rdiv(&left)
                         };
 
                         match res {
                             Some(v) => Ok(v),
-                            None => Err(Error::OpError(left.display(), op.display()))
+                            None => Err(Error::OpError(left.display(), op.display(), right.display()))
                         }
+
                     }
 
                     _ => Err(Error::CallError(format!("{}", func.display()))),

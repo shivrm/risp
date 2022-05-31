@@ -1,5 +1,5 @@
 mod types;
-use types::{ Type, RispPrint };
+use types::{ Type, RispType };
 use std::{io, io::prelude::*};
 
 /// Prints values to STDOUT, without a trailing newline
