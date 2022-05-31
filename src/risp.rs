@@ -8,7 +8,7 @@ pub use self::interpreter::Intepreter;
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;
 pub use self::utils::Span;
-pub use self::types::Type;
+pub use self::types::{ Type, RispType, Op };
 
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum Error {
@@ -27,6 +27,9 @@ pub enum Error {
     #[error("{0} is not callable")]
     CallError(String),
 
+    #[error("{0} does not implement {1} for {2}")]
+    OpError(String, String, String),
+
     #[error("{0}")]
     Error(String),
 }
@@ -38,6 +41,7 @@ pub enum Kind {
     String,
     OpenParen,
     CloseParen,
+    Operator,
     EOF,
 }
 
@@ -52,6 +56,7 @@ pub enum AstNode {
     Number(i32),
     Name(String),
     String(String),
+    Operator(Op),
     Expr(Vec<AstNode>),
 }
 

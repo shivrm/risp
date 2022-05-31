@@ -1,5 +1,5 @@
 mod types;
-use types::Type;
+use types::{ Type, RispType };
 use std::{io, io::prelude::*};
 
 /// Prints values to STDOUT, without a trailing newline
@@ -37,5 +37,5 @@ pub extern fn input(_in: Vec<Type>) -> Vec<Type> {
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).unwrap();
 
-    return vec!(Type::String(buffer.trim_end().to_owned()))
+    return vec!(Type::Str(buffer.trim_end().to_owned()))
 }

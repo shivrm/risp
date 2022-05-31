@@ -1,4 +1,4 @@
-use crate::risp::{AstNode, Error, Kind, Lexer, Token};
+use crate::risp::{Op, AstNode, Error, Kind, Lexer, Token};
 
 /// Struct which represents a parser, that parses tokens into ASTs
 pub struct Parser<'a> {
@@ -41,6 +41,17 @@ impl<'a> Parser<'a> {
             Kind::Number => AstNode::Number(content.parse().unwrap()),
 
             Kind::String => AstNode::String(content),
+
+            Kind::Operator => {
+                let op_kind = match &content[..] {
+                    "+" => Op::Plus,
+                    "-" => Op::Minus,
+                    "*" => Op::Star,
+                    "/" => Op::Slash,
+                    _   => unreachable!()
+                };
+                AstNode::Operator(op_kind)
+            }
 
             Kind::Name => AstNode::Name(content),
 

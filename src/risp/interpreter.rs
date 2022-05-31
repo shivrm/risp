@@ -1,4 +1,4 @@
-use crate::risp::{AstNode, Error, Type};
+use crate::risp::{AstNode, Error, Type, RispType, Op};
 extern crate libloading;
 
 pub struct Intepreter {
@@ -27,7 +27,7 @@ impl Intepreter {
                 Err(_) => return Err(Error::NameError(name))
             };
 
-            Ok(Type::BuiltinFn(*symbol))
+            Ok(Type::RustFn(*symbol))
         }
     }
 
@@ -36,9 +36,11 @@ impl Intepreter {
         match node {
             AstNode::Name(name) => self.get_name(name.to_owned()),
 
-            AstNode::Number(num) => Ok(Type::Number(num)),
+            AstNode::Number(num) => Ok(Type::Int(num)),
 
-            AstNode::String(s) => Ok(Type::String(s)),
+            AstNode::String(s) => Ok(Type::Str(s)),
+
+            AstNode::Operator(op) => Ok(Type::Operator(op)),
 
             AstNode::Expr(mut nodes) => {
                 // Expr has function as first argument and rest are params
@@ -51,7 +53,7 @@ impl Intepreter {
 
                 // Make sure the function is a callable
                 match func {
-                    Type::BuiltinFn(f) => {
+                    Type::RustFn(f) => {
                         let mut result = f(params).clone();
 
                         // Return Null if nothing was returned, first element if
@@ -64,6 +66,36 @@ impl Intepreter {
 
                         Ok(value)
                     }
+
+                    Type::Operator(op) => {
+                        let left = params.remove(0);
+                        let right = params.remove(0);
+
+                        let res = match op {
+                            Op::Plus => left.add(&right),
+                            Op::Minus => left.sub(&right),
+                            Op::Star => left.mul(&right),
+                            Op::Slash => left.div(&right)
+                        };
+
+                        if let Some(v) = res {
+                            return Ok(v)
+                        }
+
+                        let res = match op {
+                            Op::Plus => right.radd(&left),
+                            Op::Minus => right.rsub(&left),
+                            Op::Star => right.rmul(&left),
+                            Op::Slash => right.rdiv(&left)
+                        };
+
+                        match res {
+                            Some(v) => Ok(v),
+                            None => Err(Error::OpError(left.display(), op.display(), right.display()))
+                        }
+
+                    }
+
                     _ => Err(Error::CallError(format!("{}", func.display()))),
                 }
             }
