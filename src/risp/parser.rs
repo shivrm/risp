@@ -47,7 +47,8 @@ impl<'a> Parser<'a> {
                     "+" => Op::Plus,
                     "-" => Op::Minus,
                     "*" => Op::Star,
-                    "/" => Op::Slash
+                    "/" => Op::Slash,
+                    _   => unreachable!()
                 };
                 AstNode::Operator(op_kind)
             }

@@ -40,6 +40,8 @@ impl Intepreter {
 
             AstNode::String(s) => Ok(Type::Str(s)),
 
+            AstNode::Operator(op) => Ok(Type::Operator(op)),
+
             AstNode::Expr(mut nodes) => {
                 // Expr has function as first argument and rest are params
                 let func = self.eval(nodes.remove(0))?;

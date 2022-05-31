@@ -4,6 +4,14 @@ pub type List = Vec<Type>;
 pub type RustFn = fn(List) -> List;
 pub struct Null;
 
+#[derive(Clone, Copy)]
+pub enum Op {
+    Plus,
+    Minus,
+    Star,
+    Slash
+}
+
 macro_rules! delegate {
     ($obj:ident, $name:ident, $( $x:expr ),*) => {
         match $obj {
@@ -11,6 +19,7 @@ macro_rules! delegate {
             Type::Str(s)    => s.$name($($x)*),
             Type::List(l)   => l.$name($($x)*),
             Type::RustFn(f) => f.$name($($x)*),
+            Type::Operator(op) => op.$name($($x)*),
             Type::Null      => Null.$name($($x)*),
         }
     };
@@ -22,6 +31,7 @@ pub enum Type {
     Str(Str),
     List(List),
     RustFn(RustFn),
+    Operator(Op),
     Null,
 }
 
@@ -191,7 +201,23 @@ impl RispType for RustFn {
     }
 
     fn repr(&self) -> String {
-        "<Rust Function>".to_owned()
+        self.display()
+    }
+}
+
+impl RispType for Op {
+    fn display(&self) -> String {
+        let value = match self {
+            Op::Plus => "+",
+            Op::Minus => "-",
+            Op::Star => "*",
+            Op::Slash => "/"
+        };
+        value.to_owned()
+    }
+
+    fn repr(&self) -> String {
+        self.display()
     }
 }
 
