@@ -1,8 +1,6 @@
-use crate::risp::{AstNode, Error, Type, RispType, Op};
-extern crate libloading;
+use crate::risp::{AstNode, Error, Type, RispType, Op, rispstd};
 
 pub struct Intepreter {
-    stdlib: libloading::Library
 }
 
 impl Intepreter {
@@ -10,24 +8,14 @@ impl Intepreter {
     // This will be useful when interpreter will have default arguments
     // eg. symbol table
     pub fn new() -> Self {
-        unsafe {
-            Intepreter {
-                stdlib: libloading::Library::new(
-                    libloading::library_filename("lib/std")
-                ).unwrap()
-            }
-        }
+        Intepreter {}
     }
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     fn get_name(&self, name: String) -> Result<Type, Error> {
-        unsafe {
-            let symbol = match self.stdlib.get(name.as_bytes()) {
-                Ok(s) => s,
-                Err(_) => return Err(Error::NameError(name))
-            };
-
-            Ok(Type::RustFn(*symbol))
+        match rispstd::SYMBOLS.get(name.as_str()) {
+            Some(f) => Ok(Type::RustFn(*f)),
+            None => Err(Error::NameError(name))
         }
     }
 

@@ -3,7 +3,7 @@ mod lexer;
 mod parser;
 mod utils;
 mod types;
-mod rispstd;
+pub mod rispstd;
 
 pub use self::interpreter::Intepreter;
 pub use self::lexer::Lexer;
