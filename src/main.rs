@@ -6,6 +6,9 @@ use std::time::{Duration, Instant};
 mod risp;
 use risp::RispType;
 
+#[macro_use]
+extern crate lazy_static;
+
 fn repl() {
     let interpreter = risp::Intepreter::new();
     
