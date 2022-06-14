@@ -19,3 +19,20 @@ impl Span {
         self.start..self.end
     }
 }
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Kind {
+    Name,
+    Number,
+    String,
+    OpenParen,
+    CloseParen,
+    Operator,
+    EOF,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Token {
+    pub kind: Kind,
+    pub span: Span,
+}
