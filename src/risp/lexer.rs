@@ -1,4 +1,4 @@
-use crate::risp::utils::Span;
+use crate::risp::token::Span;
 use crate::risp::{Error, Kind, Token};
 use std::str::Chars;
 
@@ -17,6 +17,10 @@ impl<'a> Lexer<'a> {
             chars: text.chars(),
             pos: 0,
         }
+    }
+
+    pub fn eof(&self) -> bool {
+        self.chars.clone().next().is_none()
     }
 
     /// Takes characters from the lexer while a predicate is met
@@ -81,8 +85,6 @@ impl<'a> Lexer<'a> {
                 })
             }
 
-            // Change this to your liking
-            // Currently matches anything like: abdc_01, __99, _0_9_a, abc, _ etc.
             'a'..='z' | 'A'..='Z' | '_' => {
                 let span =
                     self.take_while(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '_' | '0'..='9'));

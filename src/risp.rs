@@ -1,14 +1,15 @@
 mod interpreter;
 mod lexer;
 mod parser;
-mod utils;
+mod token;
 mod types;
+pub mod rispstd;
 
 pub use self::interpreter::Intepreter;
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;
-pub use self::utils::Span;
 pub use self::types::{ Type, RispType, Op };
+pub use self::token::{ Kind, Span, Token };
 
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum Error {
@@ -19,7 +20,7 @@ pub enum Error {
     EOFError(String),
 
     #[error("Expected {0:?}")]
-    ExpectError(Kind),
+    ExpectError(token::Kind),
 
     #[error("Unknown name {0}")]
     NameError(String),
@@ -34,23 +35,6 @@ pub enum Error {
     Error(String),
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum Kind {
-    Name,
-    Number,
-    String,
-    OpenParen,
-    CloseParen,
-    Operator,
-    EOF,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Token {
-    pub kind: Kind,
-    pub span: Span,
-}
-
 #[derive(Clone)]
 pub enum AstNode {
     Number(i32),
@@ -60,7 +44,9 @@ pub enum AstNode {
     Expr(Vec<AstNode>),
 }
 
-pub fn to_ast(text: &str) -> Result<AstNode, Error> {
+pub fn to_ast(text: &str) -> Result<Vec<AstNode>, Error> {
     let lexer = Lexer::new(text);
-    Parser::new(lexer, text)?.parse_expr()
+    let mut parser = Parser::new(lexer, text)?;
+
+    parser.parse_exprs()
 }
