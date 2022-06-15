@@ -1,4 +1,4 @@
-use crate::risp::Token;
+use crate::risp::{ Token, AstNode };
 use std::io;
 use std::io::prelude::*;
 use std::time::{Duration, Instant};
@@ -8,6 +8,17 @@ use risp::RispType;
 
 #[macro_use]
 extern crate lazy_static;
+
+fn interpret_exprs(interpreter: &risp::Intepreter, asts: Vec<AstNode>) {
+    for ast in asts.iter().cloned() {
+        let value = interpreter.eval(ast);
+
+        match value {
+            Ok(v) => println!("\x1b[32m{}\x1b[0m", v.repr()),
+            Err(err) => eprintln!("\x1b[33m{err}\x1b[0m"),
+        }
+    }
+}
 
 fn repl() {
     let interpreter = risp::Intepreter::new();
@@ -37,12 +48,7 @@ fn repl() {
             }
             _ => match risp::to_ast(&mut line) {
                 Ok(ast) => {
-                    let value = interpreter.eval(ast);
-
-                    match value {
-                        Ok(v) => println!("\x1b[32m{}\x1b[0m", v.repr()),
-                        Err(err) => eprintln!("\x1b[33m{err}\x1b[0m"),
-                    }
+                    interpret_exprs(&interpreter, ast);
                 }
                 Err(err) => eprintln!("\x1b[33m{err}\x1b[0m"),
             },

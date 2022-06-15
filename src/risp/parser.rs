@@ -88,4 +88,15 @@ impl<'a> Parser<'a> {
             _ => self.parse_atom(),
         }
     }
+
+    /// Parses expressions until EOF
+    pub fn parse_exprs(&mut self) -> Result<Vec<AstNode>, Error> {
+        let mut exprs = Vec::new();
+        
+        while !self.lexer.eof() {
+            exprs.push(self.parse_expr()?);
+        }
+
+        Ok(exprs)
+    }
 }

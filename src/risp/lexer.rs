@@ -19,6 +19,10 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    pub fn eof(&self) -> bool {
+        self.chars.clone().next().is_none()
+    }
+
     /// Takes characters from the lexer while a predicate is met
     #[inline]
     fn take_while(&mut self, mut predicate: impl FnMut(char) -> bool) -> Span {

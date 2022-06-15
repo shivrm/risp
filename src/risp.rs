@@ -44,7 +44,9 @@ pub enum AstNode {
     Expr(Vec<AstNode>),
 }
 
-pub fn to_ast(text: &str) -> Result<AstNode, Error> {
+pub fn to_ast(text: &str) -> Result<Vec<AstNode>, Error> {
     let lexer = Lexer::new(text);
-    Parser::new(lexer, text)?.parse_expr()
+    let mut parser = Parser::new(lexer, text)?;
+
+    parser.parse_exprs()
 }
