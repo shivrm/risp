@@ -1,10 +1,9 @@
-use crate::risp::{ Token, AstNode };
-use std::io;
-use std::io::prelude::*;
+use std::{io, io::prelude::*};
 use std::time::{Duration, Instant};
+use std::{env, fs};
 
 mod risp;
-use risp::RispType;
+use risp::{ Token, AstNode, RispType };
 
 #[macro_use]
 extern crate lazy_static;
@@ -56,6 +55,28 @@ fn repl() {
     }
 }
 
+fn run_file(filename: &str) {
+    let mut src = fs::read_to_string(filename)
+        .expect("Could not open file");
+
+    let interpreter = risp::Intepreter::new();
+    
+    match risp::to_ast(&mut src) {
+        Ok(asts) => {
+            for ast in asts.iter().cloned() {
+                match interpreter.eval(ast) {
+                    Ok(_) => (()),
+                    Err(err) => {
+                        eprintln!("\x1b[33m{err}\x1b[0m");
+                        break;
+                    }
+                }
+            }
+        }
+        Err(err) => eprintln!("\x1b[33m{err}\x1b[0m"),
+    }
+}
+
 fn bench(mut func: impl FnMut(), num: u32, samples: u32) -> Duration {
     let mut max = Duration::from_secs(0);
     let mut min = Duration::from_secs(u64::MAX);
@@ -104,6 +125,7 @@ fn lex_speed() {
     let bytes_per_sec = (1_000_000_000.0 / avg.as_nanos() as f64) * src.len() as f64;
     let mb = 1000.0 * 1000.0;
     let mib = 1024.0 * 1024.0;
+    
     println!(
         "Average lex speed: {:.3} MB/s => {:.3} MiB/s",
         bytes_per_sec / mb,
@@ -112,7 +134,9 @@ fn lex_speed() {
 }
 
 fn main() {
-    // TODO: Change this and everything else to how you'd like it
-    // lex_speed();
-    repl();
+    match env::args().nth(1).as_deref() {
+        None => repl(),
+        Some("bench") => lex_speed(),
+        Some(filename) => run_file(&filename)
+    }
 }
