@@ -1,0 +1,24 @@
+(println "Hello World")
+
+"You won't see this"
+
+(println 1 2 3 "Print multiple values" 4 5 6)
+
+(print "Print ")
+(print "Without ")
+(print "a" "newline")
+(println)
+(println)
+
+(println "1 + 2 =" (+ 1 2))
+(println "100 - 200 =" (- 100 200))
+(println "10 * 10 =" (* 10 10))
+(println "10 / 2 =" (/ 10 2))
+(println "'abc' + 'xyz' =" (+ "abc" "xyz"))
+(println "'Hello' * 3 =" (* "Hello" 3))
+(println)
+
+(println "print and println return" (print))
+(println
+    "Hello," (input "What's your name? ")
+)
