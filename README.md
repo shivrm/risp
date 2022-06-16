@@ -7,7 +7,7 @@
 # Features
 Checked entries have been implemented.
 - [x] Integers and Strings
-- [ ] Floats
+- [x] Floats
 - [ ] Better error reporting
 - [x] Operators
 - [ ] Variables

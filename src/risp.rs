@@ -37,7 +37,8 @@ pub enum Error {
 
 #[derive(Clone)]
 pub enum AstNode {
-    Number(i32),
+    Integer(i32),
+    Float(f64),
     Name(String),
     String(String),
     Operator(Op),

@@ -1,5 +1,7 @@
 use crate::risp::{AstNode, Error, Type, RispType, Op, rispstd};
 
+type OpFn = fn(&Type, &Type) -> Option<Type>;
+
 pub struct Intepreter {
 }
 
@@ -14,7 +16,7 @@ impl Intepreter {
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     fn get_name(&self, name: String) -> Result<Type, Error> {
         match rispstd::SYMBOLS.get(name.as_str()) {
-            Some(f) => Ok(Type::RustFn(*f)),
+            Some(value) => Ok(value.clone()),
             None => Err(Error::NameError(name))
         }
     }
@@ -24,7 +26,9 @@ impl Intepreter {
         match node {
             AstNode::Name(name) => self.get_name(name.to_owned()),
 
-            AstNode::Number(num) => Ok(Type::Int(num)),
+            AstNode::Integer(num) => Ok(Type::Int(num)),
+
+            AstNode::Float(f) => Ok(Type::Float(f)),
 
             AstNode::String(s) => Ok(Type::Str(s)),
 
@@ -56,32 +60,30 @@ impl Intepreter {
                     }
 
                     Type::Operator(op) => {
-                        let left = params.remove(0);
-                        let right = params.remove(0);
-
-                        let res = match op {
-                            Op::Plus => left.add(&right),
-                            Op::Minus => left.sub(&right),
-                            Op::Star => left.mul(&right),
-                            Op::Slash => left.div(&right)
+                        let (fun, alternate): (OpFn, OpFn) = match op {
+                            Op::Plus => (RispType::add as OpFn, RispType::radd as OpFn),
+                            Op::Minus => (RispType::sub as OpFn, RispType::rsub as OpFn),
+                            Op::Star => (RispType::mul as OpFn, RispType::rmul as OpFn),
+                            Op::Slash => (RispType::div as OpFn, RispType::rdiv as OpFn),
                         };
 
-                        if let Some(v) = res {
-                            return Ok(v)
-                        }
-
-                        let res = match op {
-                            Op::Plus => right.radd(&left),
-                            Op::Minus => right.rsub(&left),
-                            Op::Star => right.rmul(&left),
-                            Op::Slash => right.rdiv(&left)
+                        let mut params = params.iter();
+                        let mut left = match params.next() {
+                            Some(v) => v.clone(),
+                            None => return Err(Error::Error("Not enough operands for operator".into()))
                         };
 
-                        match res {
-                            Some(v) => Ok(v),
-                            None => Err(Error::OpError(left.display(), op.display(), right.display()))
+                        for param in params {
+                            left = match fun(&left, &param) {
+                                Some(v) => v,
+                                None => match alternate(param, &left) {
+                                    Some(v) => v,
+                                    None => return Err(Error::OpError(left.repr(), op.repr(), param.repr()))
+                                }
+                            };
                         }
 
+                        Ok(left)
                     }
 
                     _ => Err(Error::CallError(format!("{}", func.display()))),
