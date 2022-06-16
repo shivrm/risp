@@ -4,7 +4,7 @@ pub type List = Vec<Type>;
 pub type RustFn = fn(List) -> List;
 pub struct Null;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Op {
     Plus,
     Minus,

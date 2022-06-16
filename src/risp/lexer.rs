@@ -94,6 +94,24 @@ impl<'a> Lexer<'a> {
                 })
             }
 
+            '+' | '-' => {
+                self.adv();
+                
+                if let Some('0'..='9') = self.chars.clone().next() {
+                    let mut span = self.take_while(|c| matches!(c, '0'..='9'));
+                    span.start -= 1;
+                    Ok(Token {
+                        span,
+                        kind: Kind::Number,
+                    })
+                } else {
+                    Ok(Token {
+                        span: Span::new(start, self.pos),
+                        kind: Kind::Operator,
+                    })
+                }
+            }
+
             '"' => {
                 self.adv();
                 // TODO: Add support for escape sequences (might need to split this into a seperate fn)
@@ -112,7 +130,7 @@ impl<'a> Lexer<'a> {
                 let kind = match c {
                     '(' => Kind::OpenParen,
                     ')' => Kind::CloseParen,
-                    '+' | '-' | '*' | '/' => Kind::Operator,
+                    '*' | '/' => Kind::Operator,
                     _ => return Err(Error::LexError(c)),
                 };
 

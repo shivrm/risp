@@ -36,9 +36,25 @@ impl<'a> Parser<'a> {
     /// ATOM ::= EXPR | NUMBER | NAME | STRING
     fn parse_atom(&mut self) -> Result<AstNode, Error> {
         let content = self.src[self.current_token.span.range()].to_owned();
+        let kind = self.current_token.kind;
+        self.advance()?;
 
-        let node = match &self.current_token.kind {
-            Kind::Number => AstNode::Number(content.parse().unwrap()),
+        let node = match &kind {
+            Kind::Number => {
+                let (skip_first, is_neg) = match content.chars().nth(0) {
+                    Some('+') => (true, false),
+                    Some('-') => (true, true),
+                    _ => (false, false)
+                };
+
+                let mut num: i32 = content[(skip_first.into())..].parse().unwrap();
+                
+                if is_neg {
+                    num = -num;
+                }
+
+                AstNode::Number(num)
+            }
 
             Kind::String => AstNode::String(content),
 
@@ -50,6 +66,7 @@ impl<'a> Parser<'a> {
                     "/" => Op::Slash,
                     _   => unreachable!()
                 };
+
                 AstNode::Operator(op_kind)
             }
 
@@ -60,7 +77,6 @@ impl<'a> Parser<'a> {
             t => return Err(Error::Error(format!("Invalid token {t:?} in atom"))),
         };
 
-        self.advance()?;
         return Ok(node);
     }
 
