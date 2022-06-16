@@ -1,4 +1,5 @@
 pub type Int = i32;
+pub type Float = f64;
 pub type Str = String;
 pub type List = Vec<Type>;
 pub type RustFn = fn(List) -> List;
@@ -16,6 +17,7 @@ macro_rules! delegate {
     ($obj:ident, $name:ident, $( $x:expr ),*) => {
         match $obj {
             Type::Int(n)    => n.$name($($x)*),
+            Type::Float(f)  => f.$name($($x)*),
             Type::Str(s)    => s.$name($($x)*),
             Type::List(l)   => l.$name($($x)*),
             Type::RustFn(f) => f.$name($($x)*),
@@ -28,6 +30,7 @@ macro_rules! delegate {
 #[derive(Clone)]
 pub enum Type {
     Int(Int),
+    Float(Float),
     Str(Str),
     List(List),
     RustFn(RustFn),
@@ -142,6 +145,76 @@ impl RispType for Int {
         match other {
             Type::Int(n) => Some(Type::Int(self / n)),
             _            => None
+        }
+    }
+}
+
+impl RispType for Float {
+    fn display(&self) -> String {
+        self.to_string()
+    }
+
+    fn repr(&self) -> String {
+        self.to_string()
+    }
+
+    fn add(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Float(self + f64::from(*n))),
+            Type::Float(f) => Some(Type::Float(self + f)),
+            _            => None
+        }
+    }
+
+    fn sub(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Float(self - f64::from(*n))),
+            Type::Float(f) => Some(Type::Float(self - f)),
+            _            => None
+        }
+    }
+
+    fn mul(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Float(self * f64::from(*n))),
+            Type::Float(f) => Some(Type::Float(self * f)),
+            _            => None
+        }
+    }
+
+    fn div(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Float(self / f64::from(*n))),
+            Type::Float(f) => Some(Type::Float(self / f)),
+            _            => None
+        }
+    }
+
+    fn radd(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Float(self + f64::from(*n))),
+            _ => None
+        }
+    }
+
+    fn rsub(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Float(f64::from(*n) - self)),
+            _ => None
+        }
+    }
+
+    fn rmul(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Float(self * f64::from(*n))),
+            _ => None
+        }
+    }
+
+    fn rdiv(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Float(f64::from(*n) / self)),
+            _ => None
         }
     }
 }

@@ -28,6 +28,8 @@ impl Intepreter {
 
             AstNode::Integer(num) => Ok(Type::Int(num)),
 
+            AstNode::Float(f) => Ok(Type::Float(f)),
+
             AstNode::String(s) => Ok(Type::Str(s)),
 
             AstNode::Operator(op) => Ok(Type::Operator(op)),

@@ -110,11 +110,10 @@ impl<'a> Lexer<'a> {
                 self.adv();
                 
                 if let Some('0'..='9') = self.chars.clone().next() {
-                    let mut span = self.take_while(|c| matches!(c, '0'..='9'));
-                    span.start -= 1;
+                    let kind = self.next()?.kind;
                     Ok(Token {
-                        span,
-                        kind: Kind::Number,
+                        span: Span::new(start, self.pos),
+                        kind
                     })
                 } else {
                     Ok(Token {
