@@ -78,7 +78,7 @@ impl Intepreter {
                                 Some(v) => v,
                                 None => match alternate(param, &left) {
                                     Some(v) => v,
-                                    None => return Err(Error::OpError(op.display(), left.display(), param.display()))
+                                    None => return Err(Error::OpError(left.repr(), op.repr(), param.repr()))
                                 }
                             };
                         }
