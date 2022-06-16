@@ -16,7 +16,7 @@ impl Intepreter {
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     fn get_name(&self, name: String) -> Result<Type, Error> {
         match rispstd::SYMBOLS.get(name.as_str()) {
-            Some(f) => Ok(Type::RustFn(*f)),
+            Some(value) => Ok(value.clone()),
             None => Err(Error::NameError(name))
         }
     }
@@ -26,7 +26,7 @@ impl Intepreter {
         match node {
             AstNode::Name(name) => self.get_name(name.to_owned()),
 
-            AstNode::Number(num) => Ok(Type::Int(num)),
+            AstNode::Integer(num) => Ok(Type::Int(num)),
 
             AstNode::String(s) => Ok(Type::Str(s)),
 

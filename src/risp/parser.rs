@@ -32,6 +32,14 @@ impl<'a> Parser<'a> {
         self.advance()
     }
 
+    fn parse_sign(&self, s: &str) -> (String, bool) {
+        match s.chars().nth(0) {
+            Some('+') => (s[1..].into(), false),
+            Some('-') => (s[1..].into(), true),
+            _ => (s.into(), false)
+        }
+    }
+
     /// Parses an atom
     /// ATOM ::= EXPR | NUMBER | NAME | STRING
     fn parse_atom(&mut self) -> Result<AstNode, Error> {
@@ -41,19 +49,25 @@ impl<'a> Parser<'a> {
 
         let node = match &kind {
             Kind::Number => {
-                let (skip_first, is_neg) = match content.chars().nth(0) {
-                    Some('+') => (true, false),
-                    Some('-') => (true, true),
-                    _ => (false, false)
-                };
-
-                let mut num: i32 = content[(skip_first.into())..].parse().unwrap();
+                let (content, neg) = self.parse_sign(&content);
+                let mut num: i32 = content.parse().unwrap();
                 
-                if is_neg {
+                if neg {
                     num = -num;
                 }
 
-                AstNode::Number(num)
+                AstNode::Integer(num)
+            }
+
+            Kind::Float => {
+                let (content, neg) = self.parse_sign(&content);
+                let mut num: f64 = content.parse().unwrap();
+                
+                if neg {
+                    num = -num;
+                }
+
+                AstNode::Float(num)
             }
 
             Kind::String => AstNode::String(content),

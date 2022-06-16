@@ -24,6 +24,7 @@ impl Span {
 pub enum Kind {
     Name,
     Number,
+    Float,
     String,
     OpenParen,
     CloseParen,

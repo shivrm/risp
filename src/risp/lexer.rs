@@ -79,10 +79,22 @@ impl<'a> Lexer<'a> {
             // Todo: Use a proper number parser here
             '0'..='9' => {
                 let span = self.take_while(|c| matches!(c, '0'..='9'));
-                Ok(Token {
-                    span,
-                    kind: Kind::Number,
-                })
+                
+                if let Some('.') = self.chars.clone().next() {
+                    self.adv();
+                    self.take_while(|c| matches!(c, '0'..='9'));
+
+                    Ok(Token {
+                        span: Span::new(start, self.pos),
+                        kind: Kind::Float
+                    })
+                } else {
+                    Ok(Token {
+                        span,
+                        kind: Kind::Number,
+                    })
+                }
+
             }
 
             'a'..='z' | 'A'..='Z' | '_' => {

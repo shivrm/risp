@@ -38,14 +38,12 @@ pub fn input(_in: Vec<Type>) -> Vec<Type> {
     return vec!(Type::Str(buffer.trim_end().to_owned()))
 }
 
-type RustFn = fn(Vec<Type>) -> Vec<Type>;
-
 lazy_static!(
-    pub static ref SYMBOLS: HashMap<&'static str, RustFn> = {
+    pub static ref SYMBOLS: HashMap<&'static str, Type> = {
         let mut h = HashMap::new();
-        h.insert("println", println as RustFn);
-        h.insert("print", print as RustFn);
-        h.insert("input", input as RustFn);
+        h.insert("println", Type::RustFn(println));
+        h.insert("print", Type::RustFn(print));
+        h.insert("input", Type::RustFn(input));
         h
     };
 );
