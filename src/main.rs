@@ -114,7 +114,7 @@ fn lex_speed() {
         while !matches!(
             lexer.next(),
             Ok(Token {
-                kind: risp::Kind::EOF,
+                kind: risp::TokenKind::EOF,
                 ..
             })
         ) { /* Benchmark */ }

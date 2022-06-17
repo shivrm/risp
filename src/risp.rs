@@ -9,10 +9,11 @@ pub use self::interpreter::Intepreter;
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;
 pub use self::types::{ Type, RispType, Op };
-pub use self::token::{ Kind, Span, Token };
+pub use self::token::{ TokenKind, Span, Token };
+pub use ErrorKind::*;
 
 #[derive(thiserror::Error, Debug, Clone)]
-pub enum Error {
+pub enum ErrorKind {
     #[error("Unexpected char {0} while lexing token")]
     LexError(char),
 
@@ -20,7 +21,7 @@ pub enum Error {
     EOFError(String),
 
     #[error("Expected {0:?}")]
-    ExpectError(token::Kind),
+    ExpectError(TokenKind),
 
     #[error("Unknown name {0}")]
     NameError(String),
@@ -35,17 +36,18 @@ pub enum Error {
     Error(String),
 }
 
+
 #[derive(Clone)]
 pub enum AstNode {
-    Integer(i32),
+    Int(i32),
     Float(f64),
     Name(String),
-    String(String),
+    Str(String),
     Operator(Op),
     Expr(Vec<AstNode>),
 }
 
-pub fn to_ast(text: &str) -> Result<Vec<AstNode>, Error> {
+pub fn to_ast(text: &str) -> Result<Vec<AstNode>, ErrorKind> {
     let lexer = Lexer::new(text);
     let mut parser = Parser::new(lexer, text)?;
 

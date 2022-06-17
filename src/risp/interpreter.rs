@@ -1,4 +1,4 @@
-use crate::risp::{AstNode, Error, Type, RispType, Op, rispstd};
+use crate::risp::{AstNode, ErrorKind, OpError, CallError, Error, NameError, Type, RispType, Op, rispstd};
 
 type OpFn = fn(&Type, &Type) -> Option<Type>;
 
@@ -14,23 +14,23 @@ impl Intepreter {
     }
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
-    fn get_name(&self, name: String) -> Result<Type, Error> {
+    fn get_name(&self, name: String) -> Result<Type, ErrorKind> {
         match rispstd::SYMBOLS.get(name.as_str()) {
             Some(value) => Ok(value.clone()),
-            None => Err(Error::NameError(name))
+            None => Err(NameError(name))
         }
     }
 
     /// Evaluates an AST node
-    pub fn eval(&self, node: AstNode) -> Result<Type, Error> {
+    pub fn eval(&self, node: AstNode) -> Result<Type, ErrorKind> {
         match node {
             AstNode::Name(name) => self.get_name(name.to_owned()),
 
-            AstNode::Integer(num) => Ok(Type::Int(num)),
+            AstNode::Int(num) => Ok(Type::Int(num)),
 
             AstNode::Float(f) => Ok(Type::Float(f)),
 
-            AstNode::String(s) => Ok(Type::Str(s)),
+            AstNode::Str(s) => Ok(Type::Str(s)),
 
             AstNode::Operator(op) => Ok(Type::Operator(op)),
 
@@ -70,7 +70,7 @@ impl Intepreter {
                         let mut params = params.iter();
                         let mut left = match params.next() {
                             Some(v) => v.clone(),
-                            None => return Err(Error::Error("Not enough operands for operator".into()))
+                            None => return Err(Error("Not enough operands for operator".into()))
                         };
 
                         for param in params {
@@ -78,7 +78,7 @@ impl Intepreter {
                                 Some(v) => v,
                                 None => match alternate(param, &left) {
                                     Some(v) => v,
-                                    None => return Err(Error::OpError(left.repr(), op.repr(), param.repr()))
+                                    None => return Err(OpError(left.repr(), op.repr(), param.repr()))
                                 }
                             };
                         }
@@ -86,7 +86,7 @@ impl Intepreter {
                         Ok(left)
                     }
 
-                    _ => Err(Error::CallError(format!("{}", func.display()))),
+                    _ => Err(CallError(format!("{}", func.display()))),
                 }
             }
         }

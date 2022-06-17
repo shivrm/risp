@@ -1,4 +1,4 @@
-use crate::risp::{Op, AstNode, Error, Kind, Lexer, Token};
+use crate::risp::{Op, AstNode, EOFError, Error, ExpectError, ErrorKind, TokenKind, Lexer, Token};
 
 /// Struct which represents a parser, that parses tokens into ASTs
 pub struct Parser<'a> {
@@ -8,8 +8,8 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    /// Create a new parser.
-    pub fn new(mut lexer: Lexer<'a>, src: &'a str) -> Result<Self, Error> {
+    /// Create a new parser
+    pub fn new(mut lexer: Lexer<'a>, src: &'a str) -> Result<Self, ErrorKind> {
         Ok(Self {
             current_token: lexer.next()?,
             src,
@@ -19,15 +19,15 @@ impl<'a> Parser<'a> {
 
     /// Advances the parser to the next lexer token
     #[inline]
-    fn advance(&mut self) -> Result<(), Error> {
+    fn advance(&mut self) -> Result<(), ErrorKind> {
         self.current_token = self.lexer.next()?;
         Ok(())
     }
 
     /// Checks if current token is of a specific type, and then advances the parser
-    fn expect(&mut self, kind: Kind) -> Result<(), Error> {
+    fn expect(&mut self, kind: TokenKind) -> Result<(), ErrorKind> {
         if self.current_token.kind != kind {
-            return Err(Error::ExpectError(kind));
+            return Err(ExpectError(kind));
         }
         self.advance()
     }
@@ -42,13 +42,13 @@ impl<'a> Parser<'a> {
 
     /// Parses an atom
     /// ATOM ::= EXPR | NUMBER | NAME | STRING
-    fn parse_atom(&mut self) -> Result<AstNode, Error> {
+    fn parse_atom(&mut self) -> Result<AstNode, ErrorKind> {
         let content = self.src[self.current_token.span.range()].to_owned();
         let kind = self.current_token.kind;
         self.advance()?;
 
         let node = match &kind {
-            Kind::Number => {
+            TokenKind::Int => {
                 let (content, neg) = self.parse_sign(&content);
                 let mut num: i32 = content.parse().unwrap();
                 
@@ -56,10 +56,10 @@ impl<'a> Parser<'a> {
                     num = -num;
                 }
 
-                AstNode::Integer(num)
+                AstNode::Int(num)
             }
 
-            Kind::Float => {
+            TokenKind::Float => {
                 let (content, neg) = self.parse_sign(&content);
                 let mut num: f64 = content.parse().unwrap();
                 
@@ -70,9 +70,9 @@ impl<'a> Parser<'a> {
                 AstNode::Float(num)
             }
 
-            Kind::String => AstNode::String(content),
+            TokenKind::String => AstNode::Str(content),
 
-            Kind::Operator => {
+            TokenKind::Operator => {
                 let op_kind = match &content[..] {
                     "+" => Op::Plus,
                     "-" => Op::Minus,
@@ -84,11 +84,11 @@ impl<'a> Parser<'a> {
                 AstNode::Operator(op_kind)
             }
 
-            Kind::Name => AstNode::Name(content),
+            TokenKind::Name => AstNode::Name(content),
 
-            Kind::EOF => return Err(Error::EOFError("atom".to_owned())),
+            TokenKind::EOF => return Err(EOFError("atom".to_owned())),
 
-            t => return Err(Error::Error(format!("Invalid token {t:?} in atom"))),
+            t => return Err(Error(format!("Invalid token {t:?} in atom"))),
         };
 
         return Ok(node);
@@ -96,31 +96,31 @@ impl<'a> Parser<'a> {
 
     /// Parses a list
     /// LIST ::= '(' EXPR* ')'
-    fn parse_list(&mut self) -> Result<Vec<AstNode>, Error> {
-        self.expect(Kind::OpenParen)?;
+    fn parse_list(&mut self) -> Result<Vec<AstNode>, ErrorKind> {
+        self.expect(TokenKind::OpenParen)?;
 
         let mut elements: Vec<AstNode> = Vec::new();
 
-        while self.current_token.kind != Kind::CloseParen && self.current_token.kind != Kind::EOF {
+        while self.current_token.kind != TokenKind::CloseParen && self.current_token.kind != TokenKind::EOF {
             elements.push(self.parse_expr()?);
         }
 
-        self.expect(Kind::CloseParen)?;
+        self.expect(TokenKind::CloseParen)?;
         return Ok(elements);
     }
 
     /// Parses an expression
     /// EXPR ::= LIST | ATOM
-    pub fn parse_expr(&mut self) -> Result<AstNode, Error> {
+    pub fn parse_expr(&mut self) -> Result<AstNode, ErrorKind> {
         match self.current_token.kind {
-            Kind::OpenParen => Ok(AstNode::Expr(self.parse_list()?)),
-            Kind::EOF => return Err(Error::EOFError("expr".to_owned())),
+            TokenKind::OpenParen => Ok(AstNode::Expr(self.parse_list()?)),
+            TokenKind::EOF => return Err(EOFError("expr".to_owned())),
             _ => self.parse_atom(),
         }
     }
 
     /// Parses expressions until EOF
-    pub fn parse_exprs(&mut self) -> Result<Vec<AstNode>, Error> {
+    pub fn parse_exprs(&mut self) -> Result<Vec<AstNode>, ErrorKind> {
         let mut exprs = Vec::new();
         
         while !self.lexer.eof() {

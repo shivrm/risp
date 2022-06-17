@@ -21,9 +21,9 @@ impl Span {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum Kind {
+pub enum TokenKind {
     Name,
-    Number,
+    Int,
     Float,
     String,
     OpenParen,
@@ -34,6 +34,6 @@ pub enum Kind {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Token {
-    pub kind: Kind,
+    pub kind: TokenKind,
     pub span: Span,
 }
