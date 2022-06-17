@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 pub type Int = i32;
 pub type Float = f64;
 pub type Str = String;
@@ -151,11 +153,11 @@ impl RispType for Int {
 
 impl RispType for Float {
     fn display(&self) -> String {
-        self.to_string()
+        format!("{self:?}")
     }
 
     fn repr(&self) -> String {
-        self.to_string()
+        format!("{self:?}")
     }
 
     fn add(&self, other: &Type) -> Option<Type> {

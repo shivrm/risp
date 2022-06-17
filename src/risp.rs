@@ -48,8 +48,8 @@ pub enum AstNode {
 }
 
 pub fn to_ast(text: &str) -> Result<Vec<AstNode>, ErrorKind> {
-    let lexer = Lexer::new(text);
-    let mut parser = Parser::new(lexer, text)?;
+    let mut lexer = Lexer::new(text);
+    let mut parser = Parser::new(&mut lexer, text)?;
 
     parser.parse_exprs()
 }

@@ -1,15 +1,18 @@
 use crate::risp::{Op, AstNode, EOFError, Error, ExpectError, ErrorKind, TokenKind, Lexer, Token};
 
-/// Struct which represents a parser, that parses tokens into ASTs
+/// Parses tokens from a Lexer into abstract syntax trees (ASTs).
 pub struct Parser<'a> {
-    lexer: Lexer<'a>,
+    /// A Lexer object. Allows the parser to have more control over the lexer.
+    lexer: &'a mut Lexer<'a>,
+    /// The current token that the parser is on.
     current_token: Token,
+    /// The source to generate ASTs from. This should be the same as the lexer source.
     src: &'a str,
 }
 
 impl<'a> Parser<'a> {
-    /// Create a new parser
-    pub fn new(mut lexer: Lexer<'a>, src: &'a str) -> Result<Self, ErrorKind> {
+    /// Creates a new parser
+    pub fn new(lexer: &'a mut Lexer<'a>, src: &'a str) -> Result<Self, ErrorKind> {
         Ok(Self {
             current_token: lexer.next()?,
             src,
@@ -32,45 +35,24 @@ impl<'a> Parser<'a> {
         self.advance()
     }
 
-    fn parse_sign(&self, s: &str) -> (String, bool) {
-        match s.chars().nth(0) {
-            Some('+') => (s[1..].into(), false),
-            Some('-') => (s[1..].into(), true),
-            _ => (s.into(), false)
-        }
-    }
-
-    /// Parses an atom
-    /// ATOM ::= EXPR | NUMBER | NAME | STRING
+    /// Parses an atom.
+    /// 
+    /// An atom is the smallest unit of a parsed program.
+    /// It can be an integer, a float, a string, a name, or even an operator
     fn parse_atom(&mut self) -> Result<AstNode, ErrorKind> {
-        let content = self.src[self.current_token.span.range()].to_owned();
+        // Since tokens store their content as spans
+        let content = &self.src[self.current_token.span.range()];
         let kind = self.current_token.kind;
+        
         self.advance()?;
 
         let node = match &kind {
-            TokenKind::Int => {
-                let (content, neg) = self.parse_sign(&content);
-                let mut num: i32 = content.parse().unwrap();
-                
-                if neg {
-                    num = -num;
-                }
+            // Integers and floats may have leading signs, but luckily Rust's `parse()` handles them.
+            // It also correctly parses cases like `1.` and `0.`
+            TokenKind::Int => AstNode::Int(content.parse().unwrap()),
+            TokenKind::Float => AstNode::Float(content.parse().unwrap()),
 
-                AstNode::Int(num)
-            }
-
-            TokenKind::Float => {
-                let (content, neg) = self.parse_sign(&content);
-                let mut num: f64 = content.parse().unwrap();
-                
-                if neg {
-                    num = -num;
-                }
-
-                AstNode::Float(num)
-            }
-
-            TokenKind::String => AstNode::Str(content),
+            TokenKind::String => AstNode::Str(content.into()),
 
             TokenKind::Operator => {
                 let op_kind = match &content[..] {
@@ -84,10 +66,12 @@ impl<'a> Parser<'a> {
                 AstNode::Operator(op_kind)
             }
 
-            TokenKind::Name => AstNode::Name(content),
+            TokenKind::Name => AstNode::Name(content.into()),
 
-            TokenKind::EOF => return Err(EOFError("atom".to_owned())),
+            TokenKind::EOF => return Err(EOFError("atom".into())),
 
+            // No other token should ever occur in an atom
+            // `(` case is already covered in 
             t => return Err(Error(format!("Invalid token {t:?} in atom"))),
         };
 
@@ -95,31 +79,42 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses a list
-    /// LIST ::= '(' EXPR* ')'
+    /// 
+    /// A list contains zero or more expressions between a pair of parentheses.
+    /// Note that this function returns a Vec<AstNode>, not an AstNode::List
     fn parse_list(&mut self) -> Result<Vec<AstNode>, ErrorKind> {
         self.expect(TokenKind::OpenParen)?;
 
         let mut elements: Vec<AstNode> = Vec::new();
 
+        // Keep adding elements to the list while a close paren is not encountered,
+        // The EOF check prevents infinite loops
         while self.current_token.kind != TokenKind::CloseParen && self.current_token.kind != TokenKind::EOF {
             elements.push(self.parse_expr()?);
         }
 
+        // Expect a `)`, just in case it terminated at an EOF
         self.expect(TokenKind::CloseParen)?;
         return Ok(elements);
     }
 
     /// Parses an expression
+    /// 
     /// EXPR ::= LIST | ATOM
     pub fn parse_expr(&mut self) -> Result<AstNode, ErrorKind> {
         match self.current_token.kind {
+            // Parses as a list if the item starts with a `(`.
+            // This works because a list will always begin with a `(`.
             TokenKind::OpenParen => Ok(AstNode::Expr(self.parse_list()?)),
+
             TokenKind::EOF => return Err(EOFError("expr".to_owned())),
+            
+            // Anything else is parsed as an atom
             _ => self.parse_atom(),
         }
     }
 
-    /// Parses expressions until EOF
+    /// Keeps parsing expressions until EOF is encountered.
     pub fn parse_exprs(&mut self) -> Result<Vec<AstNode>, ErrorKind> {
         let mut exprs = Vec::new();
         
