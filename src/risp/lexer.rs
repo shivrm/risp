@@ -1,5 +1,5 @@
 use crate::risp::token::Span;
-use crate::risp::{LexError, ErrorKind, TokenKind as Kind, Token};
+use crate::risp::{ErrorKind, LexError, Token, TokenKind as Kind};
 use std::str::Chars;
 
 /// Splits a source string into tokens
@@ -39,9 +39,9 @@ impl<'a> Lexer<'a> {
             None => return,
         }
     }
-    
+
     /// Advances the lexer while a predicate is met.
-    /// 
+    ///
     /// The predicate is a function which takes a `char` as an argument and returns a `bool`.
     /// The return value determines whether the lexer should be advanced.
     fn take_while(&mut self, mut predicate: impl FnMut(char) -> bool) -> Span {
@@ -74,13 +74,13 @@ impl<'a> Lexer<'a> {
             ($kind:expr) => {
                 Token {
                     span: Span::new(start, self.pos),
-                    kind: $kind
+                    kind: $kind,
                 }
             };
             ($kind:expr, $span:expr) => {
                 Token {
                     span: $span,
-                    kind: $kind
+                    kind: $kind,
                 }
             };
         }
@@ -98,7 +98,7 @@ impl<'a> Lexer<'a> {
 
             '0'..='9' => {
                 self.take_while(|c| matches!(c, '0'..='9'));
-                
+
                 // If the number is followed by a `.`, treat it as a float
                 if let Some('.') = self.chars.clone().next() {
                     self.adv();
@@ -108,7 +108,6 @@ impl<'a> Lexer<'a> {
                 } else {
                     tok!(Kind::Int)
                 }
-
             }
 
             'a'..='z' | 'A'..='Z' | '_' => {
@@ -119,7 +118,7 @@ impl<'a> Lexer<'a> {
             // + and - are matched here because they might be the sign of a number.
             '+' | '-' => {
                 self.adv();
-                
+
                 // When next token is a number, add this +/- to it. The sign will be parsed by the parser.
                 if let Some('0'..='9') = self.chars.clone().next() {
                     let kind = self.next()?.kind;

@@ -5,12 +5,12 @@ pub type List = Vec<Type>;
 pub type RustFn = fn(List) -> List;
 pub struct Null;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Op {
     Plus,
     Minus,
     Star,
-    Slash
+    Slash,
 }
 
 macro_rules! delegate {
@@ -110,7 +110,6 @@ impl RispType for Type {
     }
 }
 
-
 impl RispType for Int {
     fn display(&self) -> String {
         self.to_string()
@@ -123,28 +122,28 @@ impl RispType for Int {
     fn add(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self + n)),
-            _            => None
+            _ => None,
         }
     }
 
     fn sub(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self - n)),
-            _            => None
+            _ => None,
         }
     }
 
     fn mul(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self * n)),
-            _            => None
+            _ => None,
         }
     }
 
     fn div(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self / n)),
-            _            => None
+            _ => None,
         }
     }
 }
@@ -162,7 +161,7 @@ impl RispType for Float {
         match other {
             Type::Int(n) => Some(Type::Float(self + f64::from(*n))),
             Type::Float(f) => Some(Type::Float(self + f)),
-            _            => None
+            _ => None,
         }
     }
 
@@ -170,7 +169,7 @@ impl RispType for Float {
         match other {
             Type::Int(n) => Some(Type::Float(self - f64::from(*n))),
             Type::Float(f) => Some(Type::Float(self - f)),
-            _            => None
+            _ => None,
         }
     }
 
@@ -178,7 +177,7 @@ impl RispType for Float {
         match other {
             Type::Int(n) => Some(Type::Float(self * f64::from(*n))),
             Type::Float(f) => Some(Type::Float(self * f)),
-            _            => None
+            _ => None,
         }
     }
 
@@ -186,35 +185,35 @@ impl RispType for Float {
         match other {
             Type::Int(n) => Some(Type::Float(self / f64::from(*n))),
             Type::Float(f) => Some(Type::Float(self / f)),
-            _            => None
+            _ => None,
         }
     }
 
     fn radd(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Float(self + f64::from(*n))),
-            _ => None
+            _ => None,
         }
     }
 
     fn rsub(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Float(f64::from(*n) - self)),
-            _ => None
+            _ => None,
         }
     }
 
     fn rmul(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Float(self * f64::from(*n))),
-            _ => None
+            _ => None,
         }
     }
 
     fn rdiv(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Float(f64::from(*n) / self)),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -231,21 +230,21 @@ impl RispType for Str {
     fn add(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Str(s) => Some(Type::Str(self.clone() + &s)),
-            _            => None
-        }   
+            _ => None,
+        }
     }
 
     fn mul(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Str(self.repeat(*n as usize))),
-            _            => None
+            _ => None,
         }
     }
 
     fn rmul(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Str(self.repeat(*n as usize))),
-            _            => None
+            _ => None,
         }
     }
 }
@@ -258,8 +257,8 @@ impl RispType for List {
             Some(el) => {
                 let r = el.repr();
                 format!(", {r}")
-            },
-            None => String::from("[")
+            }
+            None => String::from("["),
         };
 
         for el in iter {
@@ -276,7 +275,7 @@ impl RispType for List {
 
         let mut result = match iter.next() {
             Some(el) => format!("[{}", el.display()),
-            None => String::from("[")
+            None => String::from("["),
         };
 
         for el in iter {
@@ -290,22 +289,36 @@ impl RispType for List {
 
     fn add(&self, other: &Type) -> Option<Type> {
         match other {
-            Type::List(el) => Some(Type::List(self.iter().cloned().chain(el.iter().cloned()).collect())),
-            _              => None
+            Type::List(el) => Some(Type::List(
+                self.iter().cloned().chain(el.iter().cloned()).collect(),
+            )),
+            _ => None,
         }
     }
 
     fn mul(&self, other: &Type) -> Option<Type> {
         match other {
-            Type::Int(n) => Some(Type::List(self.iter().cloned().cycle().take(self.len() * *n as usize).collect())),
-            _            => None
+            Type::Int(n) => Some(Type::List(
+                self.iter()
+                    .cloned()
+                    .cycle()
+                    .take(self.len() * *n as usize)
+                    .collect(),
+            )),
+            _ => None,
         }
     }
 
     fn rmul(&self, other: &Type) -> Option<Type> {
         match other {
-            Type::Int(n) => Some(Type::List(self.iter().cloned().cycle().take(self.len() * *n as usize).collect())),
-            _            => None
+            Type::Int(n) => Some(Type::List(
+                self.iter()
+                    .cloned()
+                    .cycle()
+                    .take(self.len() * *n as usize)
+                    .collect(),
+            )),
+            _ => None,
         }
     }
 }
@@ -326,7 +339,7 @@ impl RispType for Op {
             Op::Plus => "+",
             Op::Minus => "-",
             Op::Star => "*",
-            Op::Slash => "/"
+            Op::Slash => "/",
         };
         value.to_owned()
     }

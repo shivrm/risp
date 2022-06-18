@@ -1,15 +1,16 @@
-use crate::risp::{AstNode, ErrorKind, OpError, CallError, Error, NameError, Type, RispType, Op, rispstd};
+use crate::risp::{
+    rispstd, AstNode, CallError, Error, ErrorKind, NameError, Op, OpError, RispType, Type,
+};
 
 // Operator functions have this type signature
 type OpFn = fn(&Type, &Type) -> Option<Type>;
 
 /// Interprets ASTs
-pub struct Intepreter {
-}
+pub struct Intepreter {}
 
 impl Intepreter {
     /// Creates a new interpreter.
-    /// 
+    ///
     /// Currently, this does not do much. Once a prelude is added, this
     /// function can be used to initialize it.
     pub fn new() -> Self {
@@ -21,13 +22,17 @@ impl Intepreter {
     fn get_name(&self, name: String) -> Result<Type, ErrorKind> {
         match rispstd::SYMBOLS.get(name.as_str()) {
             Some(value) => Ok(value.clone()),
-            None => Err(NameError(name))
+            None => Err(NameError(name)),
         }
     }
 
     /// Calls a function that's implemented in Rust. The function must accept a `Vec<Type>` as an argument
     /// and return a `Vec<Type>`.
-    pub fn call_rustfn(&self, func: fn(Vec<Type>) -> Vec<Type>, params: Vec<Type>) -> Result<Type, ErrorKind> {
+    pub fn call_rustfn(
+        &self,
+        func: fn(Vec<Type>) -> Vec<Type>,
+        params: Vec<Type>,
+    ) -> Result<Type, ErrorKind> {
         let result = func(params);
 
         // Returns Null if the function returns an empty Vec.
@@ -43,11 +48,10 @@ impl Intepreter {
     }
 
     /// Calls an operator `op` on a Vec containing operands.
-    /// 
+    ///
     /// This operator is evaluated similar to a `.reduce()`.
     /// i.e., `(+ a b c d)` will be evaluated as `((a + b) + c) + d`
     pub fn call_operator(&self, op: Op, operands: Vec<Type>) -> Result<Type, ErrorKind> {
-
         // a + b can be evaluated as `a.add(b)` or as `b.radd(a)`. This is useful when
         // a does not directly implement `add` for b.
         // The interpreter always tries to use the primary fn first. If this is not implemented,
@@ -60,11 +64,11 @@ impl Intepreter {
         };
 
         let mut params = operands.iter();
-        
+
         // Stores the left operand for each application of the operator.
         let mut left = match params.next() {
             Some(v) => v.clone(),
-            None => return Err(Error("Not enough parameters for operator".into()))
+            None => return Err(Error("Not enough parameters for operator".into())),
         };
 
         for right in params {
@@ -76,8 +80,8 @@ impl Intepreter {
                     Some(v) => v,
 
                     // If both fail, return an error
-                    None => return Err(OpError(left.repr(), op.repr(), right.repr()))
-                }
+                    None => return Err(OpError(left.repr(), op.repr(), right.repr())),
+                },
             };
         }
 
@@ -96,11 +100,13 @@ impl Intepreter {
             AstNode::Operator(op) => Ok(Type::Operator(op)),
 
             AstNode::Expr(mut nodes) => {
-                // Expr has function as first argument and rest are parameters
-                let func = match nodes.pop() {
-                    Some(f) => self.eval(f)?,
-                    None => return Err(Error("Expression is empty".into()))
+                if nodes.is_empty() {
+                    return Err(Error("Expression is empty".into()));
                 };
+                
+                // Expr has function as first argument and rest are parameters
+                let func = nodes.remove(0);
+                let func = self.eval(func)?;
 
                 // Evaluate each parameter
                 let mut params = Vec::new();

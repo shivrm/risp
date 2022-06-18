@@ -1,15 +1,15 @@
 mod interpreter;
 mod lexer;
 mod parser;
+pub mod rispstd;
 mod token;
 mod types;
-pub mod rispstd;
 
 pub use self::interpreter::Intepreter;
 pub use self::lexer::Lexer;
 pub use self::parser::Parser;
-pub use self::types::{ Type, RispType, Op };
-pub use self::token::{ TokenKind, Span, Token };
+pub use self::token::{Span, Token, TokenKind};
+pub use self::types::{Op, RispType, Type};
 pub use ErrorKind::*;
 
 #[derive(thiserror::Error, Debug, Clone)]
@@ -36,8 +36,7 @@ pub enum ErrorKind {
     Error(String),
 }
 
-
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum AstNode {
     Int(i32),
     Float(f64),
