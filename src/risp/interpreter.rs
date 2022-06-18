@@ -1,19 +1,23 @@
 use crate::risp::{AstNode, ErrorKind, OpError, CallError, Error, NameError, Type, RispType, Op, rispstd};
 
+// Operator functions have this type signature
 type OpFn = fn(&Type, &Type) -> Option<Type>;
 
+/// Interprets ASTs
 pub struct Intepreter {
 }
 
 impl Intepreter {
-    /// Create a new interpreter
-    // This will be useful when interpreter will have default arguments
-    // eg. symbol table
+    /// Creates a new interpreter.
+    /// 
+    /// Currently, this does not do much. Once a prelude is added, this
+    /// function can be used to initialize it.
     pub fn new() -> Self {
         Intepreter {}
     }
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
+    /// Currently, this just gets them from the SYMBOLS HashMap in the standard library.
     fn get_name(&self, name: String) -> Result<Type, ErrorKind> {
         match rispstd::SYMBOLS.get(name.as_str()) {
             Some(value) => Ok(value.clone()),
@@ -21,23 +25,84 @@ impl Intepreter {
         }
     }
 
+    /// Calls a function that's implemented in Rust. The function must accept a `Vec<Type>` as an argument
+    /// and return a `Vec<Type>`.
+    pub fn call_rustfn(&self, func: fn(Vec<Type>) -> Vec<Type>, params: Vec<Type>) -> Result<Type, ErrorKind> {
+        let result = func(params);
+
+        // Returns Null if the function returns an empty Vec.
+        // If the Vec contains one value, returns the value
+        // If the Vec contains more than one value, returns it as a list
+        let result = match result.len() {
+            0 => Type::Null,
+            1 => result[0].clone(),
+            _ => Type::List(result),
+        };
+
+        Ok(result)
+    }
+
+    /// Calls an operator `op` on a Vec containing operands.
+    /// 
+    /// This operator is evaluated similar to a `.reduce()`.
+    /// i.e., `(+ a b c d)` will be evaluated as `((a + b) + c) + d`
+    pub fn call_operator(&self, op: Op, operands: Vec<Type>) -> Result<Type, ErrorKind> {
+
+        // a + b can be evaluated as `a.add(b)` or as `b.radd(a)`. This is useful when
+        // a does not directly implement `add` for b.
+        // The interpreter always tries to use the primary fn first. If this is not implemented,
+        // then it uses the alternate fn.
+        let (primary_fn, alternate_fn) = match op {
+            Op::Plus => (RispType::add as OpFn, RispType::radd as OpFn),
+            Op::Minus => (RispType::sub as OpFn, RispType::rsub as OpFn),
+            Op::Star => (RispType::mul as OpFn, RispType::rmul as OpFn),
+            Op::Slash => (RispType::div as OpFn, RispType::rdiv as OpFn),
+        };
+
+        let mut params = operands.iter();
+        
+        // Stores the left operand for each application of the operator.
+        let mut left = match params.next() {
+            Some(v) => v.clone(),
+            None => return Err(Error("Not enough parameters for operator".into()))
+        };
+
+        for right in params {
+            // Tries to use the primary function
+            left = match primary_fn(&left, &right) {
+                Some(v) => v,
+                // Use secondary function only if primary function fails
+                None => match alternate_fn(right, &left) {
+                    Some(v) => v,
+
+                    // If both fail, return an error
+                    None => return Err(OpError(left.repr(), op.repr(), right.repr()))
+                }
+            };
+        }
+
+        Ok(left)
+    }
+
     /// Evaluates an AST node
     pub fn eval(&self, node: AstNode) -> Result<Type, ErrorKind> {
         match node {
             AstNode::Name(name) => self.get_name(name.to_owned()),
 
+            // These just involve transposing the value from an AstNode to a Type
             AstNode::Int(num) => Ok(Type::Int(num)),
-
             AstNode::Float(f) => Ok(Type::Float(f)),
-
             AstNode::Str(s) => Ok(Type::Str(s)),
-
             AstNode::Operator(op) => Ok(Type::Operator(op)),
 
             AstNode::Expr(mut nodes) => {
-                // Expr has function as first argument and rest are params
-                let func = self.eval(nodes.remove(0))?;
+                // Expr has function as first argument and rest are parameters
+                let func = match nodes.pop() {
+                    Some(f) => self.eval(f)?,
+                    None => return Err(Error("Expression is empty".into()))
+                };
 
+                // Evaluate each parameter
                 let mut params = Vec::new();
                 for node in nodes.iter() {
                     params.push(self.eval(node.clone())?);
@@ -45,46 +110,9 @@ impl Intepreter {
 
                 // Make sure the function is a callable
                 match func {
-                    Type::RustFn(f) => {
-                        let mut result = f(params).clone();
+                    Type::RustFn(f) => self.call_rustfn(f, params),
 
-                        // Return Null if nothing was returned, first element if
-                        // only one was returned, and otherwise, a list
-                        let value = match result.len() {
-                            0 => Type::Null,
-                            1 => result.pop().unwrap(),
-                            _ => Type::List(result),
-                        };
-
-                        Ok(value)
-                    }
-
-                    Type::Operator(op) => {
-                        let (fun, alternate): (OpFn, OpFn) = match op {
-                            Op::Plus => (RispType::add as OpFn, RispType::radd as OpFn),
-                            Op::Minus => (RispType::sub as OpFn, RispType::rsub as OpFn),
-                            Op::Star => (RispType::mul as OpFn, RispType::rmul as OpFn),
-                            Op::Slash => (RispType::div as OpFn, RispType::rdiv as OpFn),
-                        };
-
-                        let mut params = params.iter();
-                        let mut left = match params.next() {
-                            Some(v) => v.clone(),
-                            None => return Err(Error("Not enough operands for operator".into()))
-                        };
-
-                        for param in params {
-                            left = match fun(&left, &param) {
-                                Some(v) => v,
-                                None => match alternate(param, &left) {
-                                    Some(v) => v,
-                                    None => return Err(OpError(left.repr(), op.repr(), param.repr()))
-                                }
-                            };
-                        }
-
-                        Ok(left)
-                    }
+                    Type::Operator(op) => self.call_operator(op, params),
 
                     _ => Err(CallError(format!("{}", func.display()))),
                 }

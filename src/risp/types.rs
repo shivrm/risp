@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 pub type Int = i32;
 pub type Float = f64;
 pub type Str = String;
