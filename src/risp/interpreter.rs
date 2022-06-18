@@ -1,26 +1,39 @@
+use std::collections::HashMap;
+
 use crate::risp::{
-    rispstd, AstNode, CallError, Error, ErrorKind, NameError, Op, OpError, RispType, Type,
+    rispstd, macros,
+    ErrorKind, CallError, Error, NameError, OpError,
+    AstNode, Op, RispType, Type,
 };
 
 // Operator functions have this type signature
 type OpFn = fn(&Type, &Type) -> Option<Type>;
 
 /// Interprets ASTs
-pub struct Intepreter {}
+pub struct Intepreter<'a> {
+    frame: HashMap<&'a str, Type>
+}
 
-impl Intepreter {
+impl<'a> Intepreter<'a> {
     /// Creates a new interpreter.
     ///
     /// Currently, this does not do much. Once a prelude is added, this
     /// function can be used to initialize it.
     pub fn new() -> Self {
-        Intepreter {}
+        let default_frame: HashMap<&'a str, Type> = {
+            let mut h = HashMap::new();
+            h.extend(rispstd::SYMBOLS.clone().into_iter());
+            h.extend(macros::SYMBOLS.clone().into_iter());
+            h
+        };
+
+        Self { frame: default_frame }
     }
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     /// Currently, this just gets them from the SYMBOLS HashMap in the standard library.
     fn get_name(&self, name: String) -> Result<Type, ErrorKind> {
-        match rispstd::SYMBOLS.get(name.as_str()) {
+        match self.frame.get(name.as_str()) {
             Some(value) => Ok(value.clone()),
             None => Err(NameError(name)),
         }

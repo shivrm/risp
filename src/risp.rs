@@ -2,6 +2,7 @@ mod interpreter;
 mod lexer;
 mod parser;
 pub mod rispstd;
+pub mod macros;
 mod token;
 mod types;
 
