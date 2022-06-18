@@ -1,8 +1,11 @@
+use crate::risp::{ Intepreter, AstNode };
+
 pub type Int = i32;
 pub type Float = f64;
 pub type Str = String;
 pub type List = Vec<Type>;
 pub type RustFn = fn(List) -> List;
+pub type RustMacro = fn(&mut Intepreter, Vec<AstNode>) -> Type;
 pub struct Null;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -21,6 +24,7 @@ macro_rules! delegate {
             Type::Str(s)    => s.$name($($x)*),
             Type::List(l)   => l.$name($($x)*),
             Type::RustFn(f) => f.$name($($x)*),
+            Type::RustMacro(f) => f.$name($($x)*),
             Type::Operator(op) => op.$name($($x)*),
             Type::Null      => Null.$name($($x)*),
         }
@@ -34,6 +38,7 @@ pub enum Type {
     Str(Str),
     List(List),
     RustFn(RustFn),
+    RustMacro(RustMacro),
     Operator(Op),
     Null,
 }
@@ -326,6 +331,17 @@ impl RispType for List {
 impl RispType for RustFn {
     fn display(&self) -> String {
         "<Rust Function>".to_owned()
+    }
+
+    fn repr(&self) -> String {
+        self.display()
+    }
+}
+
+
+impl RispType for RustMacro {
+    fn display(&self) -> String {
+        "<Rust Macro>".to_owned()
     }
 
     fn repr(&self) -> String {

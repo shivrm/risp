@@ -39,11 +39,11 @@ pub fn input(_in: Vec<Type>) -> Vec<Type> {
 }
 
 lazy_static! {
-    pub static ref SYMBOLS: HashMap<&'static str, Type> = {
+    pub static ref SYMBOLS: HashMap<String, Type> = {
         let mut h = HashMap::new();
-        h.insert("println", Type::RustFn(println));
-        h.insert("print", Type::RustFn(print));
-        h.insert("input", Type::RustFn(input));
+        h.insert("println".into(), Type::RustFn(println));
+        h.insert("print".into(), Type::RustFn(print));
+        h.insert("input".into(), Type::RustFn(input));
         h
     };
 }

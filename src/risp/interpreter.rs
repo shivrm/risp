@@ -10,17 +10,17 @@ use crate::risp::{
 type OpFn = fn(&Type, &Type) -> Option<Type>;
 
 /// Interprets ASTs
-pub struct Intepreter<'a> {
-    frame: HashMap<&'a str, Type>
+pub struct Intepreter {
+    frame: HashMap<String, Type>
 }
 
-impl<'a> Intepreter<'a> {
+impl Intepreter {
     /// Creates a new interpreter.
     ///
     /// Currently, this does not do much. Once a prelude is added, this
     /// function can be used to initialize it.
     pub fn new() -> Self {
-        let default_frame: HashMap<&'a str, Type> = {
+        let default_frame: HashMap<String, Type> = {
             let mut h = HashMap::new();
             h.extend(rispstd::SYMBOLS.clone().into_iter());
             h.extend(macros::SYMBOLS.clone().into_iter());
@@ -32,11 +32,15 @@ impl<'a> Intepreter<'a> {
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     /// Currently, this just gets them from the SYMBOLS HashMap in the standard library.
-    fn get_name(&self, name: String) -> Result<Type, ErrorKind> {
-        match self.frame.get(name.as_str()) {
+    pub fn get_name(&self, name: &str) -> Result<Type, ErrorKind> {
+        match self.frame.get(name) {
             Some(value) => Ok(value.clone()),
-            None => Err(NameError(name)),
+            None => Err(NameError(name.into())),
         }
+    }
+
+    pub fn set_name(&mut self, name: &str, value: Type) {
+        self.frame.insert(name.into(), value);
     }
 
     /// Calls a function that's implemented in Rust. The function must accept a `Vec<Type>` as an argument
@@ -102,9 +106,9 @@ impl<'a> Intepreter<'a> {
     }
 
     /// Evaluates an AST node
-    pub fn eval(&self, node: AstNode) -> Result<Type, ErrorKind> {
+    pub fn eval(&mut self, node: AstNode) -> Result<Type, ErrorKind> {
         match node {
-            AstNode::Name(name) => self.get_name(name.to_owned()),
+            AstNode::Name(name) => self.get_name(&name),
 
             // These just involve transposing the value from an AstNode to a Type
             AstNode::Int(num) => Ok(Type::Int(num)),
@@ -120,6 +124,10 @@ impl<'a> Intepreter<'a> {
                 // Expr has function as first argument and rest are parameters
                 let func = nodes.remove(0);
                 let func = self.eval(func)?;
+
+                if let Type::RustMacro(mac) = func {
+                    return Ok(mac(self, nodes));
+                }
 
                 // Evaluate each parameter
                 let mut params = Vec::new();
