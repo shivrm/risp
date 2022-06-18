@@ -1,7 +1,7 @@
-use std::{io, io::prelude::*};
 use std::collections::HashMap;
+use std::{io, io::prelude::*};
 
-use crate::risp::types::{ Type, RispType };
+use crate::risp::types::{RispType, Type};
 
 /// Prints values to STDOUT, without a trailing newline
 pub fn print(_in: Vec<Type>) -> Vec<Type> {
@@ -9,9 +9,9 @@ pub fn print(_in: Vec<Type>) -> Vec<Type> {
 
     match iter.next() {
         Some(v) => print!("{}", v.display()),
-        None => (())
+        None => (()),
     }
-    
+
     for el in iter {
         print!(" {}", el.display());
     }
@@ -35,10 +35,10 @@ pub fn input(_in: Vec<Type>) -> Vec<Type> {
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).unwrap();
 
-    return vec!(Type::Str(buffer.trim_end().to_owned()))
+    return vec![Type::Str(buffer.trim_end().to_owned())];
 }
 
-lazy_static!(
+lazy_static! {
     pub static ref SYMBOLS: HashMap<&'static str, Type> = {
         let mut h = HashMap::new();
         h.insert("println", Type::RustFn(println));
@@ -46,4 +46,4 @@ lazy_static!(
         h.insert("input", Type::RustFn(input));
         h
     };
-);
+}
