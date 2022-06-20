@@ -47,10 +47,10 @@ impl Intepreter {
     /// and return a `Vec<Type>`.
     pub fn call_rustfn(
         &self,
-        func: fn(Vec<Type>) -> Vec<Type>,
+        func: fn(Vec<Type>) -> Result<Vec<Type>, ErrorKind>,
         params: Vec<Type>,
     ) -> Result<Type, ErrorKind> {
-        let result = func(params);
+        let result = func(params)?;
 
         // Returns Null if the function returns an empty Vec.
         // If the Vec contains one value, returns the value
@@ -126,7 +126,7 @@ impl Intepreter {
                 let func = self.eval(func)?;
 
                 if let Type::RustMacro(mac) = func {
-                    return Ok(mac(self, nodes));
+                    return Ok(mac(self, nodes)?);
                 }
 
                 // Evaluate each parameter

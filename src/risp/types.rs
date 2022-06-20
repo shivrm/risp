@@ -1,11 +1,11 @@
-use crate::risp::{ Intepreter, AstNode };
+use crate::risp::{ Intepreter, AstNode, ErrorKind };
 
 pub type Int = i32;
 pub type Float = f64;
 pub type Str = String;
 pub type List = Vec<Type>;
-pub type RustFn = fn(List) -> List;
-pub type RustMacro = fn(&mut Intepreter, Vec<AstNode>) -> Type;
+pub type RustFn = fn(List) -> Result<List, ErrorKind>;
+pub type RustMacro = fn(&mut Intepreter, Vec<AstNode>) -> Result<Type, ErrorKind>;
 pub struct Null;
 
 #[derive(Clone, Copy, Debug, PartialEq)]

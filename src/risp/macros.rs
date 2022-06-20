@@ -1,17 +1,17 @@
 use std::collections::HashMap;
-use crate::risp::{ Intepreter, Type, AstNode };
+use crate::risp::{ Intepreter, Type, AstNode, ErrorKind };
 
-fn set(inter: &mut Intepreter, mut nodes: Vec<AstNode>) -> Type {
+fn set(inter: &mut Intepreter, mut nodes: Vec<AstNode>) -> Result<Type, ErrorKind> {
     if nodes.len() != 2 {
-        panic!("Wrong number of arguments for set (expected 2)");
+        return Err(ErrorKind::Error("Expected 2 arguments".into()))
     }
 
     if let AstNode::Name(name) = nodes.remove(0) {
         let value = inter.eval(nodes.pop().unwrap()).unwrap();
         inter.set_name(&name, value.clone());
-        value
+        Ok(value)
     } else {
-        panic!("Expected first argument to be a name");
+        Err(ErrorKind::Error("Expected first argument to be a name".into()))
     }
 }
 
