@@ -1,10 +1,16 @@
 use std::collections::HashMap;
 
-use crate::risp::{
-    rispstd, macros,
-    ErrorKind, CallError, Error, NameError, OpError,
-    AstNode, Op, RispType, Type,
-};
+use super::{rispstd, macros, ErrorKind, RuntimeError, RispType, Type};
+use crate::risp::{AstNode, shared::Op};
+
+macro_rules! err {
+    ($kind:ident, $msg:expr) => {
+        Err(RuntimeError {
+            kind: ErrorKind::$kind,
+            msg: $msg.into()
+        })
+    };
+}
 
 // Operator functions have this type signature
 type OpFn = fn(&Type, &Type) -> Option<Type>;
@@ -32,10 +38,10 @@ impl Interpreter {
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     /// Currently, this just gets them from the SYMBOLS HashMap in the standard library.
-    pub fn get_name(&self, name: &str) -> Result<Type, ErrorKind> {
+    pub fn get_name(&self, name: &str) -> Result<Type, RuntimeError> {
         match self.frame.get(name) {
             Some(value) => Ok(value.clone()),
-            None => Err(NameError(name.into())),
+            None => err!(NameError, format!("{name} is not defined")),
         }
     }
 
@@ -47,9 +53,9 @@ impl Interpreter {
     /// and return a `Vec<Type>`.
     pub fn call_rustfn(
         &self,
-        func: fn(Vec<Type>) -> Result<Vec<Type>, ErrorKind>,
+        func: fn(Vec<Type>) -> Result<Vec<Type>, RuntimeError>,
         params: Vec<Type>,
-    ) -> Result<Type, ErrorKind> {
+    ) -> Result<Type, RuntimeError> {
         let result = func(params)?;
 
         // Returns Null if the function returns an empty Vec.
@@ -68,7 +74,7 @@ impl Interpreter {
     ///
     /// This operator is evaluated similar to a `.reduce()`.
     /// i.e., `(+ a b c d)` will be evaluated as `((a + b) + c) + d`
-    pub fn call_operator(&self, op: Op, operands: Vec<Type>) -> Result<Type, ErrorKind> {
+    pub fn call_operator(&self, op: Op, operands: Vec<Type>) -> Result<Type, RuntimeError> {
         // a + b can be evaluated as `a.add(b)` or as `b.radd(a)`. This is useful when
         // a does not directly implement `add` for b.
         // The interpreter always tries to use the primary fn first. If this is not implemented,
@@ -85,7 +91,7 @@ impl Interpreter {
         // Stores the left operand for each application of the operator.
         let mut left = match params.next() {
             Some(v) => v.clone(),
-            None => return Err(Error("Not enough parameters for operator".into())),
+            None => return err!(TypeError, "expected at least 1 argument"),
         };
 
         for right in params {
@@ -97,7 +103,10 @@ impl Interpreter {
                     Some(v) => v,
 
                     // If both fail, return an error
-                    None => return Err(OpError(left.type_name(), op.display(), right.type_name())),
+                    None => {
+                        let error_msg = format!("invalid operand types for {}: {} and {}", op.display(), left.type_name(), right.type_name());
+                        return err!(TypeError, error_msg)
+                    },
                 },
             };
         }
@@ -106,7 +115,7 @@ impl Interpreter {
     }
 
     /// Evaluates an AST node
-    pub fn eval(&mut self, node: AstNode) -> Result<Type, ErrorKind> {
+    pub fn eval(&mut self, node: AstNode) -> Result<Type, RuntimeError> {
         match node {
             AstNode::Name(name) => self.get_name(&name),
 
@@ -118,7 +127,7 @@ impl Interpreter {
 
             AstNode::Expr(mut nodes) => {
                 if nodes.is_empty() {
-                    return Err(Error("Expression is empty".into()));
+                    return err!(ValueError, "expression is empty");
                 };
                 
                 // Expr has function as first argument and rest are parameters
@@ -141,7 +150,7 @@ impl Interpreter {
 
                     Type::Operator(op) => self.call_operator(op, params),
 
-                    _ => Err(CallError(format!("{}", func.type_name()))),
+                    _ => err!(TypeError, format!("{} is not callable", func.type_name())),
                 }
             }
         }

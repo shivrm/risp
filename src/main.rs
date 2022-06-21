@@ -18,7 +18,7 @@ fn interpret_exprs(interpreter: &mut risp::Interpreter, asts: Vec<AstNode>) {
         match value {
             Ok(Type::Null) => (),
             Ok(v) => println!("\x1b[32m{}\x1b[0m", v.repr()),
-            Err(err) => eprintln!("\x1b[33m{err}\x1b[0m"),
+            Err(err) => eprintln!("\x1b[33m{err:?}\x1b[0m"),
         }
     }
 }
@@ -65,7 +65,7 @@ fn run_file(filename: &str) {
                 match interpreter.eval(ast) {
                     Ok(_) => (()),
                     Err(err) => {
-                        eprintln!("\x1b[33m{err}\x1b[0m");
+                        eprintln!("\x1b[33m{err:?}\x1b[0m");
                         break;
                     }
                 }

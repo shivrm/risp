@@ -1,6 +1,5 @@
 use super::token::Span;
-use crate::risp::shared::SyntaxError;
-use super::{Token, TokenKind as Kind};
+use super::{SyntaxError, Token, TokenKind as Kind};
 use std::str::Chars;
 
 /// Splits a source string into tokens

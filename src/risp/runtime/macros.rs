@@ -1,9 +1,19 @@
 use std::collections::HashMap;
-use crate::risp::{ Interpreter, Type, AstNode, ErrorKind };
+use crate::risp::AstNode;
+use super::{Interpreter, Type, RuntimeError, ErrorKind};
 
-fn set(inter: &mut Interpreter, mut nodes: Vec<AstNode>) -> Result<Type, ErrorKind> {
+macro_rules! err {
+    ($kind:ident, $msg:expr) => {
+        Err(RuntimeError {
+            kind: ErrorKind::$kind,
+            msg: $msg.into()
+        })
+    };
+}
+
+fn set(inter: &mut Interpreter, mut nodes: Vec<AstNode>) -> Result<Type, RuntimeError> {
     if nodes.len() != 2 {
-        return Err(ErrorKind::Error("Expected 2 arguments".into()))
+        return err!(ValueError, format!("expected 2 arguments, found {}", nodes.len()));
     }
 
     if let AstNode::Name(name) = nodes.remove(0) {
@@ -11,7 +21,7 @@ fn set(inter: &mut Interpreter, mut nodes: Vec<AstNode>) -> Result<Type, ErrorKi
         inter.set_name(&name, value.clone());
         Ok(value)
     } else {
-        Err(ErrorKind::Error("Expected first argument to be a name".into()))
+        return err!(ValueError, format!("first argument must eb a name"))
     }
 }
 

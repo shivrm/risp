@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 use std::{io, io::prelude::*};
 
-use crate::risp::ErrorKind;
-use crate::risp::{RispType, Type};
+use super::{RuntimeError, RispType, Type};
 
 /// Prints values to STDOUT, without a trailing newline
-pub fn print(_in: Vec<Type>) -> Result<Vec<Type>, ErrorKind> {
+pub fn print(_in: Vec<Type>) -> Result<Vec<Type>, RuntimeError> {
     let mut iter = _in.iter();
 
     match iter.next() {
@@ -23,14 +22,14 @@ pub fn print(_in: Vec<Type>) -> Result<Vec<Type>, ErrorKind> {
 }
 
 /// Prints values to STDOUT, followed by a newline
-pub fn println(_in: Vec<Type>) -> Result<Vec<Type>, ErrorKind> {
+pub fn println(_in: Vec<Type>) -> Result<Vec<Type>, RuntimeError> {
     print(_in)?;
     print!("\n");
 
     Ok(Vec::new())
 }
 
-pub fn input(_in: Vec<Type>) -> Result<Vec<Type>, ErrorKind> {
+pub fn input(_in: Vec<Type>) -> Result<Vec<Type>, RuntimeError> {
     print(_in)?;
 
     let mut buffer = String::new();

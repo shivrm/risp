@@ -1,5 +1,5 @@
-use crate::risp::{shared::Op, SyntaxError};
-use super::{AstNode, Lexer, Token, TokenKind};
+use crate::risp::shared::Op;
+use super::{SyntaxError, AstNode, Lexer, Token, TokenKind};
 
 /// Parses tokens from a Lexer into abstract syntax trees (ASTs).
 pub struct Parser<'a> {

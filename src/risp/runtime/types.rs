@@ -1,11 +1,11 @@
-use crate::risp::{ Interpreter, AstNode, ErrorKind, Op };
+use crate::risp::{ Interpreter, AstNode, Op, RuntimeError };
 
 pub type Int = i32;
 pub type Float = f64;
 pub type Str = String;
 pub type List = Vec<Type>;
-pub type RustFn = fn(List) -> Result<List, ErrorKind>;
-pub type RustMacro = fn(&mut Interpreter, Vec<AstNode>) -> Result<Type, ErrorKind>;
+pub type RustFn = fn(List) -> Result<List, RuntimeError>;
+pub type RustMacro = fn(&mut Interpreter, Vec<AstNode>) -> Result<Type, RuntimeError>;
 pub struct Null;
 
 macro_rules! delegate {
