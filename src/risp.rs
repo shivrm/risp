@@ -9,7 +9,7 @@ pub use shared::{
     ErrorKind::*
 };
 
-pub fn to_ast(text: &str) -> Result<Vec<AstNode>, ErrorKind> {
+pub fn to_ast(text: &str) -> Result<Vec<AstNode>, SyntaxError> {
     let mut lexer = Lexer::new(text);
     let mut parser = Parser::new(&mut lexer, text)?;
 

@@ -1,9 +1,20 @@
+use std::fmt;
+use super::TokenKind;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Op {
     Plus,
     Minus,
     Star,
     Slash,
+}
+
+pub struct SyntaxError(pub String);
+
+impl fmt::Debug for SyntaxError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Syntax error: {}", self.0)
+    }
 }
 
 #[derive(thiserror::Error, Debug, Clone)]
@@ -15,7 +26,7 @@ pub enum ErrorKind {
     EOFError(String),
 
     #[error("Expected {0:?}")]
-    ExpectError(super::TokenKind),
+    ExpectError(TokenKind),
 
     #[error("Unknown name {0}")]
     NameError(String),

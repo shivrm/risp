@@ -47,7 +47,7 @@ fn repl() {
                 Ok(ast) => {
                     interpret_exprs(&mut interpreter, ast);
                 }
-                Err(err) => eprintln!("\x1b[33m{err}\x1b[0m"),
+                Err(err) => eprintln!("\x1b[33m{err:?}\x1b[0m"),
             },
         }
     }
@@ -71,7 +71,7 @@ fn run_file(filename: &str) {
                 }
             }
         }
-        Err(err) => eprintln!("\x1b[33m{err}\x1b[0m"),
+        Err(err) => eprintln!("\x1b[33m{err:?}\x1b[0m"),
     }
 }
 
