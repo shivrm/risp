@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::{io, io::prelude::*};
 
 use crate::risp::ErrorKind;
-use crate::risp::types::{RispType, Type};
+use crate::risp::{RispType, Type};
 
 /// Prints values to STDOUT, without a trailing newline
 pub fn print(_in: Vec<Type>) -> Result<Vec<Type>, ErrorKind> {

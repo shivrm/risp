@@ -1,20 +1,12 @@
-use crate::risp::{ Intepreter, AstNode, ErrorKind };
+use crate::risp::{ Interpreter, AstNode, ErrorKind, Op };
 
 pub type Int = i32;
 pub type Float = f64;
 pub type Str = String;
 pub type List = Vec<Type>;
 pub type RustFn = fn(List) -> Result<List, ErrorKind>;
-pub type RustMacro = fn(&mut Intepreter, Vec<AstNode>) -> Result<Type, ErrorKind>;
+pub type RustMacro = fn(&mut Interpreter, Vec<AstNode>) -> Result<Type, ErrorKind>;
 pub struct Null;
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Op {
-    Plus,
-    Minus,
-    Star,
-    Slash,
-}
 
 macro_rules! delegate {
     ($obj:ident, $name:ident, $( $x:expr ),*) => {

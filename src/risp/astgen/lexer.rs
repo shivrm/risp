@@ -1,4 +1,4 @@
-use crate::risp::token::Span;
+use super::token::Span;
 use crate::risp::{ErrorKind, LexError, Token, TokenKind as Kind};
 use std::str::Chars;
 

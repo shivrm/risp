@@ -10,11 +10,11 @@ use crate::risp::{
 type OpFn = fn(&Type, &Type) -> Option<Type>;
 
 /// Interprets ASTs
-pub struct Intepreter {
+pub struct Interpreter {
     frame: HashMap<String, Type>
 }
 
-impl Intepreter {
+impl Interpreter {
     /// Creates a new interpreter.
     ///
     /// Currently, this does not do much. Once a prelude is added, this

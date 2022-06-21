@@ -11,7 +11,7 @@ use crate::risp::TokenKind;
 extern crate lazy_static;
 
 /// Interprets multiple expressions using the same interpreter
-fn interpret_exprs(interpreter: &mut risp::Intepreter, asts: Vec<AstNode>) {
+fn interpret_exprs(interpreter: &mut risp::Interpreter, asts: Vec<AstNode>) {
     for ast in asts.iter().cloned() {
         let value = interpreter.eval(ast);
 
@@ -24,7 +24,7 @@ fn interpret_exprs(interpreter: &mut risp::Intepreter, asts: Vec<AstNode>) {
 }
 
 fn repl() {
-    let mut interpreter = risp::Intepreter::new();
+    let mut interpreter = risp::Interpreter::new();
 
     // Initial greeting
     print!(concat!("risp v0.5.0\n", "Type 'quit' to quit\n"));
@@ -57,7 +57,7 @@ fn repl() {
 fn run_file(filename: &str) {
     let mut src = fs::read_to_string(filename).expect("Could not open file");
 
-    let mut interpreter = risp::Intepreter::new();
+    let mut interpreter = risp::Interpreter::new();
 
     match risp::to_ast(&mut src) {
         Ok(asts) => {

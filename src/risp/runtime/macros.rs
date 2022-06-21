@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use crate::risp::{ Intepreter, Type, AstNode, ErrorKind };
+use crate::risp::{ Interpreter, Type, AstNode, ErrorKind };
 
-fn set(inter: &mut Intepreter, mut nodes: Vec<AstNode>) -> Result<Type, ErrorKind> {
+fn set(inter: &mut Interpreter, mut nodes: Vec<AstNode>) -> Result<Type, ErrorKind> {
     if nodes.len() != 2 {
         return Err(ErrorKind::Error("Expected 2 arguments".into()))
     }
