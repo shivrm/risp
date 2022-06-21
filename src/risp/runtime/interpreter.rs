@@ -97,7 +97,7 @@ impl Interpreter {
                     Some(v) => v,
 
                     // If both fail, return an error
-                    None => return Err(OpError(left.repr(), op.repr(), right.repr())),
+                    None => return Err(OpError(left.type_name(), op.display(), right.type_name())),
                 },
             };
         }
@@ -141,7 +141,7 @@ impl Interpreter {
 
                     Type::Operator(op) => self.call_operator(op, params),
 
-                    _ => Err(CallError(format!("{}", func.display()))),
+                    _ => Err(CallError(format!("{}", func.type_name()))),
                 }
             }
         }

@@ -38,6 +38,8 @@ pub enum Type {
 pub trait RispType {
     fn repr(&self) -> String;
     fn display(&self) -> String;
+    fn type_name(&self) -> String;
+    
     fn add(&self, _other: &Type) -> Option<Type> {
         None
     }
@@ -69,9 +71,13 @@ impl RispType for Type {
     fn repr(&self) -> String {
         delegate!(self, repr,)
     }
-
+    
     fn display(&self) -> String {
         delegate!(self, display,)
+    }
+    
+    fn type_name(&self) -> String {
+        delegate!(self, type_name,)
     }
 
     fn add(&self, other: &Type) -> Option<Type> {
@@ -116,6 +122,10 @@ impl RispType for Int {
         self.to_string()
     }
 
+    fn type_name(&self) -> String {
+        return "int".into()
+    }
+
     fn add(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self + n)),
@@ -152,6 +162,10 @@ impl RispType for Float {
 
     fn repr(&self) -> String {
         format!("{self:?}")
+    }
+
+    fn type_name(&self) -> String {
+        return "float".into()
     }
 
     fn add(&self, other: &Type) -> Option<Type> {
@@ -224,6 +238,10 @@ impl RispType for Str {
         format!("{self:?}")
     }
 
+    fn type_name(&self) -> String {
+        return "str".into()
+    }
+
     fn add(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Str(s) => Some(Type::Str(self.clone() + &s)),
@@ -284,6 +302,10 @@ impl RispType for List {
         result
     }
 
+    fn type_name(&self) -> String {
+        return "list".into()
+    }
+
     fn add(&self, other: &Type) -> Option<Type> {
         match other {
             Type::List(el) => Some(Type::List(
@@ -328,6 +350,10 @@ impl RispType for RustFn {
     fn repr(&self) -> String {
         self.display()
     }
+
+    fn type_name(&self) -> String {
+        return "rustfn".into()
+    }
 }
 
 
@@ -338,6 +364,10 @@ impl RispType for RustMacro {
 
     fn repr(&self) -> String {
         self.display()
+    }
+
+    fn type_name(&self) -> String {
+        return "rustmacro".into()
     }
 }
 
@@ -355,6 +385,10 @@ impl RispType for Op {
     fn repr(&self) -> String {
         self.display()
     }
+
+    fn type_name(&self) -> String {
+        return "operator".into()
+    }
 }
 
 impl RispType for Null {
@@ -364,5 +398,9 @@ impl RispType for Null {
 
     fn repr(&self) -> String {
         String::new()
+    }
+
+    fn type_name(&self) -> String {
+        return "null".into()
     }
 }

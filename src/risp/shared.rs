@@ -19,15 +19,6 @@ impl fmt::Debug for SyntaxError {
 
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum ErrorKind {
-    #[error("Unexpected char {0} while lexing token")]
-    LexError(char),
-
-    #[error("Unexpected EOF while reading {0}")]
-    EOFError(String),
-
-    #[error("Expected {0:?}")]
-    ExpectError(TokenKind),
-
     #[error("Unknown name {0}")]
     NameError(String),
 
