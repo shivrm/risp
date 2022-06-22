@@ -1,11 +1,10 @@
 [package]
 name = "risp"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["shivrm"]
 license = "MIT"
 edition = "2021"
-description = "Yet another lisp dialect"
+description = "A LISP-like language"
 
 [dependencies]
-thiserror = "1.0"
 lazy_static = "1.4.0"

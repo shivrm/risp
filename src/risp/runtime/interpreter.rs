@@ -1,39 +1,62 @@
-use crate::risp::{
-    rispstd, AstNode, CallError, Error, ErrorKind, NameError, Op, OpError, RispType, Type,
-};
+use std::collections::HashMap;
+
+use super::{rispstd, macros, ErrorKind, RuntimeError, RispType, Type};
+use crate::risp::{AstNode, shared::Op};
+
+macro_rules! err {
+    ($kind:ident, $msg:expr) => {
+        Err(RuntimeError {
+            kind: ErrorKind::$kind,
+            msg: $msg.into()
+        })
+    };
+}
 
 // Operator functions have this type signature
 type OpFn = fn(&Type, &Type) -> Option<Type>;
 
 /// Interprets ASTs
-pub struct Intepreter {}
+pub struct Interpreter {
+    frame: HashMap<String, Type>
+}
 
-impl Intepreter {
+impl Interpreter {
     /// Creates a new interpreter.
     ///
     /// Currently, this does not do much. Once a prelude is added, this
     /// function can be used to initialize it.
     pub fn new() -> Self {
-        Intepreter {}
+        let default_frame: HashMap<String, Type> = {
+            let mut h = HashMap::new();
+            h.extend(rispstd::SYMBOLS.clone().into_iter());
+            h.extend(macros::SYMBOLS.clone().into_iter());
+            h
+        };
+
+        Self { frame: default_frame }
     }
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     /// Currently, this just gets them from the SYMBOLS HashMap in the standard library.
-    fn get_name(&self, name: String) -> Result<Type, ErrorKind> {
-        match rispstd::SYMBOLS.get(name.as_str()) {
+    pub fn get_name(&self, name: &str) -> Result<Type, RuntimeError> {
+        match self.frame.get(name) {
             Some(value) => Ok(value.clone()),
-            None => Err(NameError(name)),
+            None => err!(NameError, format!("{name} is not defined")),
         }
+    }
+
+    pub fn set_name(&mut self, name: &str, value: Type) {
+        self.frame.insert(name.into(), value);
     }
 
     /// Calls a function that's implemented in Rust. The function must accept a `Vec<Type>` as an argument
     /// and return a `Vec<Type>`.
     pub fn call_rustfn(
         &self,
-        func: fn(Vec<Type>) -> Vec<Type>,
+        func: fn(Vec<Type>) -> Result<Vec<Type>, RuntimeError>,
         params: Vec<Type>,
-    ) -> Result<Type, ErrorKind> {
-        let result = func(params);
+    ) -> Result<Type, RuntimeError> {
+        let result = func(params)?;
 
         // Returns Null if the function returns an empty Vec.
         // If the Vec contains one value, returns the value
@@ -51,7 +74,7 @@ impl Intepreter {
     ///
     /// This operator is evaluated similar to a `.reduce()`.
     /// i.e., `(+ a b c d)` will be evaluated as `((a + b) + c) + d`
-    pub fn call_operator(&self, op: Op, operands: Vec<Type>) -> Result<Type, ErrorKind> {
+    pub fn call_operator(&self, op: Op, operands: Vec<Type>) -> Result<Type, RuntimeError> {
         // a + b can be evaluated as `a.add(b)` or as `b.radd(a)`. This is useful when
         // a does not directly implement `add` for b.
         // The interpreter always tries to use the primary fn first. If this is not implemented,
@@ -68,7 +91,7 @@ impl Intepreter {
         // Stores the left operand for each application of the operator.
         let mut left = match params.next() {
             Some(v) => v.clone(),
-            None => return Err(Error("Not enough parameters for operator".into())),
+            None => return err!(TypeError, "expected at least 1 argument"),
         };
 
         for right in params {
@@ -80,7 +103,10 @@ impl Intepreter {
                     Some(v) => v,
 
                     // If both fail, return an error
-                    None => return Err(OpError(left.repr(), op.repr(), right.repr())),
+                    None => {
+                        let error_msg = format!("invalid operand types for {}: {} and {}", op.display(), left.type_name(), right.type_name());
+                        return err!(TypeError, error_msg)
+                    },
                 },
             };
         }
@@ -89,9 +115,9 @@ impl Intepreter {
     }
 
     /// Evaluates an AST node
-    pub fn eval(&self, node: AstNode) -> Result<Type, ErrorKind> {
+    pub fn eval(&mut self, node: AstNode) -> Result<Type, RuntimeError> {
         match node {
-            AstNode::Name(name) => self.get_name(name.to_owned()),
+            AstNode::Name(name) => self.get_name(&name),
 
             // These just involve transposing the value from an AstNode to a Type
             AstNode::Int(num) => Ok(Type::Int(num)),
@@ -101,12 +127,16 @@ impl Intepreter {
 
             AstNode::Expr(mut nodes) => {
                 if nodes.is_empty() {
-                    return Err(Error("Expression is empty".into()));
+                    return err!(ValueError, "expression is empty");
                 };
                 
                 // Expr has function as first argument and rest are parameters
                 let func = nodes.remove(0);
                 let func = self.eval(func)?;
+
+                if let Type::RustMacro(mac) = func {
+                    return Ok(mac(self, nodes)?);
+                }
 
                 // Evaluate each parameter
                 let mut params = Vec::new();
@@ -120,7 +150,7 @@ impl Intepreter {
 
                     Type::Operator(op) => self.call_operator(op, params),
 
-                    _ => Err(CallError(format!("{}", func.display()))),
+                    _ => err!(TypeError, format!("{} is not callable", func.type_name())),
                 }
             }
         }

@@ -1,5 +1,5 @@
-use crate::risp::token::Span;
-use crate::risp::{ErrorKind, LexError, Token, TokenKind as Kind};
+use super::token::Span;
+use super::{SyntaxError, Token, TokenKind as Kind};
 use std::str::Chars;
 
 /// Splits a source string into tokens
@@ -66,7 +66,7 @@ impl<'a> Lexer<'a> {
     /// Gets the next token from the lexer. Since the lexer might throw an error,
     /// this method returns a `Result`
     #[inline]
-    pub fn next(&mut self) -> Result<Token, ErrorKind> {
+    pub fn next(&mut self) -> Result<Token, SyntaxError> {
         let start = self.pos;
 
         /// A macro that makes it easier to create a token
@@ -145,7 +145,10 @@ impl<'a> Lexer<'a> {
                     '(' => Kind::OpenParen,
                     ')' => Kind::CloseParen,
                     '*' | '/' => Kind::Operator,
-                    _ => return Err(LexError(c)),
+                    _ => {
+                        let error_msg = format!("did not expect character {c:?}");
+                        return Err(SyntaxError(error_msg));
+                    }
                 };
 
                 tok!(kind)

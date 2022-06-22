@@ -1,4 +1,5 @@
-use crate::risp::{AstNode, EOFError, Error, ErrorKind, ExpectError, Lexer, Op, Token, TokenKind};
+use crate::risp::shared::Op;
+use super::{SyntaxError, AstNode, Lexer, Token, TokenKind};
 
 /// Parses tokens from a Lexer into abstract syntax trees (ASTs).
 pub struct Parser<'a> {
@@ -12,7 +13,7 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     /// Creates a new parser
-    pub fn new(lexer: &'a mut Lexer<'a>, src: &'a str) -> Result<Self, ErrorKind> {
+    pub fn new(lexer: &'a mut Lexer<'a>, src: &'a str) -> Result<Self, SyntaxError> {
         Ok(Self {
             current_token: lexer.next()?,
             src,
@@ -22,15 +23,16 @@ impl<'a> Parser<'a> {
 
     /// Advances the parser to the next lexer token
     #[inline]
-    fn advance(&mut self) -> Result<(), ErrorKind> {
+    fn advance(&mut self) -> Result<(), SyntaxError> {
         self.current_token = self.lexer.next()?;
         Ok(())
     }
 
     /// Checks if current token is of a specific type, and then advances the parser
-    fn expect(&mut self, kind: TokenKind) -> Result<(), ErrorKind> {
+    fn expect(&mut self, kind: TokenKind) -> Result<(), SyntaxError> {
         if self.current_token.kind != kind {
-            return Err(ExpectError(kind));
+            let error_msg = format!("expected {kind:?}, found {:?}", self.current_token.kind);
+            return Err(SyntaxError(error_msg));
         }
         self.advance()
     }
@@ -39,7 +41,7 @@ impl<'a> Parser<'a> {
     ///
     /// An atom is the smallest unit of a parsed program.
     /// It can be an integer, a float, a string, a name, or even an operator
-    fn parse_atom(&mut self) -> Result<AstNode, ErrorKind> {
+    fn parse_atom(&mut self) -> Result<AstNode, SyntaxError> {
         // Since tokens store their content as spans
         let content = &self.src[self.current_token.span.range()];
         let kind = self.current_token.kind;
@@ -68,11 +70,13 @@ impl<'a> Parser<'a> {
 
             TokenKind::Name => AstNode::Name(content.into()),
 
-            TokenKind::EOF => return Err(EOFError("atom".into())),
 
             // No other token should ever occur in an atom
-            // `(` case is already covered in
-            t => return Err(Error(format!("Invalid token {t:?} in atom"))),
+            // `(` case is already covered in parse_expr
+            t => {
+                let error_msg = format!("unexpected {t:?} while parsing atom");
+                return Err(SyntaxError(error_msg))
+            },
         };
 
         return Ok(node);
@@ -82,7 +86,7 @@ impl<'a> Parser<'a> {
     ///
     /// A list contains zero or more expressions between a pair of parentheses.
     /// Note that this function returns a Vec<AstNode>, not an AstNode::List
-    fn parse_list(&mut self) -> Result<Vec<AstNode>, ErrorKind> {
+    fn parse_list(&mut self) -> Result<Vec<AstNode>, SyntaxError> {
         self.expect(TokenKind::OpenParen)?;
 
         let mut elements: Vec<AstNode> = Vec::new();
@@ -104,13 +108,13 @@ impl<'a> Parser<'a> {
     /// Parses an expression
     ///
     /// EXPR ::= LIST | ATOM
-    pub fn parse_expr(&mut self) -> Result<AstNode, ErrorKind> {
+    pub fn parse_expr(&mut self) -> Result<AstNode, SyntaxError> {
         match self.current_token.kind {
             // Parses as a list if the item starts with a `(`.
             // This works because a list will always begin with a `(`.
             TokenKind::OpenParen => Ok(AstNode::Expr(self.parse_list()?)),
 
-            TokenKind::EOF => return Err(EOFError("expr".to_owned())),
+            TokenKind::EOF => Err(SyntaxError("unexpected EOF while parsing atom".into())),
 
             // Anything else is parsed as an atom
             _ => self.parse_atom(),
@@ -118,7 +122,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Keeps parsing expressions until EOF is encountered.
-    pub fn parse_exprs(&mut self) -> Result<Vec<AstNode>, ErrorKind> {
+    pub fn parse_exprs(&mut self) -> Result<Vec<AstNode>, SyntaxError> {
         let mut exprs = Vec::new();
 
         while !self.lexer.eof() {
