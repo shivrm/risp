@@ -30,6 +30,8 @@ impl Interpreter {
             let mut h = HashMap::new();
             h.extend(rispstd::SYMBOLS.clone().into_iter());
             h.extend(macros::SYMBOLS.clone().into_iter());
+            h.insert("true".into(), Type::Bool(true));
+            h.insert("false".into(), Type::Bool(false));
             h
         };
 

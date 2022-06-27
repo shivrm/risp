@@ -1,6 +1,7 @@
 use crate::risp::{ Interpreter, AstNode, Op, RuntimeError };
 
 pub type Int = i32;
+pub type Bool = bool;
 pub type Float = f64;
 pub type Str = String;
 pub type List = Vec<Type>;
@@ -12,6 +13,7 @@ macro_rules! delegate {
     ($obj:ident, $name:ident, $( $x:expr ),*) => {
         match $obj {
             Type::Int(n)    => n.$name($($x)*),
+            Type::Bool(b)   => b.$name($($x)*),
             Type::Float(f)  => f.$name($($x)*),
             Type::Str(s)    => s.$name($($x)*),
             Type::List(l)   => l.$name($($x)*),
@@ -26,6 +28,7 @@ macro_rules! delegate {
 #[derive(Clone)]
 pub enum Type {
     Int(Int),
+    Bool(bool),
     Float(Float),
     Str(Str),
     List(List),
@@ -150,6 +153,88 @@ impl RispType for Int {
     fn div(&self, other: &Type) -> Option<Type> {
         match other {
             Type::Int(n) => Some(Type::Int(self / n)),
+            _ => None,
+        }
+    }
+}
+
+impl RispType for Bool {
+    fn display(&self) -> String {
+        self.to_string()
+    }
+
+    fn repr(&self) -> String {
+        self.to_string()
+    }
+
+    fn type_name(&self) -> String {
+        return "bool".into()
+    }
+
+    fn add(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Bool(b) => Some(Type::Int(*self as i32 + *b as i32)),
+            Type::Int(n) => Some(Type::Int(*self as i32 + n)),
+            Type::Float(f) => Some(Type::Float(*self as i32 as f64 + f)),
+            _ => None,
+        }
+    }
+
+    fn sub(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Bool(b) => Some(Type::Int(*self as i32 - *b as i32)),
+            Type::Int(n) => Some(Type::Int(*self as i32 - n)),
+            Type::Float(f) => Some(Type::Float(*self as i32 as f64 - f)),
+            _ => None,
+        }
+    }
+
+    fn mul(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Bool(b) => Some(Type::Int(*self as i32 * *b as i32)),
+            Type::Int(n) => Some(Type::Int(*self as i32 * n)),
+            Type::Float(f) => Some(Type::Float(*self as i32 as f64 * f)),
+            _ => None,
+        }
+    }
+
+    fn div(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Bool(b) => Some(Type::Int(*self as i32 / *b as i32)),
+            Type::Int(n) => Some(Type::Int(*self as i32 / n)),
+            Type::Float(f) => Some(Type::Float(*self as i32 as f64 / f)),
+            _ => None,
+        }
+    }
+
+    fn radd(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Int(n + *self as i32)),
+            Type::Float(f) => Some(Type::Float(f + *self as i32 as f64)),
+            _ => None,
+        }
+    }
+
+    fn rsub(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Int(n - *self as i32)),
+            Type::Float(f) => Some(Type::Float(f - *self as i32 as f64)),
+            _ => None,
+        }
+    }
+
+    fn rmul(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Int(n * *self as i32)),
+            Type::Float(f) => Some(Type::Float(f * *self as i32 as f64)),
+            _ => None,
+        }
+    }
+
+    fn rdiv(&self, other: &Type) -> Option<Type> {
+        match other {
+            Type::Int(n) => Some(Type::Int(n / *self as i32)),
+            Type::Float(f) => Some(Type::Float(f / *self as i32 as f64)),
             _ => None,
         }
     }
