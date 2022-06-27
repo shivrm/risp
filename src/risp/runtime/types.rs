@@ -3,7 +3,7 @@ use crate::risp::{Op};
 mod misc;
 mod num;
 
-use misc::*; use num::*;
+pub use misc::*; pub use num::*;
 
 macro_rules! delegate {
     ($obj:ident, $name:ident, $( $x:expr ),*) => {

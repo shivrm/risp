@@ -25,10 +25,20 @@ fn set(inter: &mut Interpreter, mut nodes: Vec<AstNode>) -> Result<Type, Runtime
     }
 }
 
+fn list(inter: &mut Interpreter, nodes: Vec<AstNode>) -> Result<Type, RuntimeError> {
+    let mut elems: Vec<Type> = Vec::new();
+    for node in nodes {
+        elems.push(inter.eval(node)?);
+    };
+
+    Ok(elems.into())
+}
+
 lazy_static! {
     pub static ref SYMBOLS: HashMap<String, Type> = {
         let mut h = HashMap::new();
         h.insert("set".into(), Type::RustMacro(set));
+        h.insert("list".into(), Type::RustMacro(list));
         h
     };
 }

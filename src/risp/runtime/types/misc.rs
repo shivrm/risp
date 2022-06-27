@@ -54,7 +54,7 @@ impl RispType for List {
         let mut result = match iter.next() {
             Some(el) => {
                 let r = el.repr();
-                format!(", {r}")
+                format!("[{r}")
             }
             None => String::from("["),
         };
