@@ -62,13 +62,13 @@ pub trait RispType {
     fn rdiv(&self, _other: &Type) -> Option<Type> {
         None
     }
-    fn eq(&self, _other: &Type) -> Option<Type> {
+    fn equal(&self, _other: &Type) -> Option<Type> {
         None
     }
-    fn gt(&self, _other: &Type) -> Option<Type> {
+    fn greater(&self, _other: &Type) -> Option<Type> {
         None
     }
-    fn lt(&self, _other: &Type) -> Option<Type> {
+    fn less(&self, _other: &Type) -> Option<Type> {
         None
     }
 }
@@ -132,5 +132,17 @@ impl RispType for Type {
 
     fn rdiv(&self, other: &Type) -> Option<Type> {
         delegate!(self, div, other)
+    }
+
+    fn equal(&self, other: &Type) -> Option<Type> {
+        delegate!(self, equal, other)
+    }
+
+    fn greater(&self, other: &Type) -> Option<Type> {
+        delegate!(self, greater, other)
+    }
+
+    fn less(&self, other: &Type) -> Option<Type> {
+        delegate!(self, less, other)
     }
 }

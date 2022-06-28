@@ -49,7 +49,7 @@ impl RispType for Int {
         Some(res)
     }
     
-    fn eq(&self, other: &Type) -> Option<Type> {
+    fn equal(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::Int(n) => (self == n).into(),
             _ => return None,
@@ -57,7 +57,7 @@ impl RispType for Int {
         Some(res)
     }
 
-    fn gt(&self, other: &Type) -> Option<Type> {
+    fn greater(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::Int(n) => (self > n).into(),
             _ => return None,
@@ -65,7 +65,7 @@ impl RispType for Int {
         Some(res)
     }
 
-    fn lt(&self, other: &Type) -> Option<Type> {
+    fn less(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::Int(n) => (self < n).into(),
             _ => return None,
@@ -163,7 +163,7 @@ impl RispType for Bool {
         Some(res)
     }
 
-    fn eq(&self, other: &Type) -> Option<Type> {
+    fn equal(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::Bool(b) => (self == b).into(),
             &Type::Int(n) => ((*self as i32) == n).into(),
@@ -173,7 +173,7 @@ impl RispType for Bool {
         Some(res)
     }
 
-    fn gt(&self, other: &Type) -> Option<Type> {
+    fn greater(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::Bool(b) => (self > b).into(),
             &Type::Int(n) => ((*self as i32) > n).into(),
@@ -183,7 +183,7 @@ impl RispType for Bool {
         Some(res)
     }
 
-    fn lt(&self, other: &Type) -> Option<Type> {
+    fn less(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::Bool(b) => (self < b).into(),
             &Type::Int(n) => ((*self as i32) < n).into(),
@@ -275,7 +275,7 @@ impl RispType for Float {
         Some(res)
     }
 
-    fn eq(&self, other: &Type) -> Option<Type> {
+    fn equal(&self, other: &Type) -> Option<Type> {
         let res = match other {
             &Type::Int(n) => (*self == (n as f64)).into(),
             Type::Float(f) => (self == f).into(),
@@ -284,7 +284,7 @@ impl RispType for Float {
         Some(res)
     }
 
-    fn gt(&self, other: &Type) -> Option<Type> {
+    fn greater(&self, other: &Type) -> Option<Type> {
         let res = match other {
             &Type::Int(n) => (*self > (n as f64)).into(),
             Type::Float(f) => (self > f).into(),
@@ -293,7 +293,7 @@ impl RispType for Float {
         Some(res)
     }
 
-    fn lt(&self, other: &Type) -> Option<Type> {
+    fn less(&self, other: &Type) -> Option<Type> {
         let res = match other {
             &Type::Int(n) => (*self < (n as f64)).into(),
             Type::Float(f) => (self < f).into(),

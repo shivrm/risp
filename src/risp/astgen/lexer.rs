@@ -144,7 +144,7 @@ impl<'a> Lexer<'a> {
                 let kind = match c {
                     '(' => Kind::OpenParen,
                     ')' => Kind::CloseParen,
-                    '*' | '/' => Kind::Operator,
+                    '*' | '/' | '>' | '<' | '=' => Kind::Operator,
                     _ => {
                         let error_msg = format!("did not expect character {c:?}");
                         return Err(SyntaxError(error_msg));

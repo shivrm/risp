@@ -62,6 +62,9 @@ impl<'a> Parser<'a> {
                     "-" => Op::Minus,
                     "*" => Op::Star,
                     "/" => Op::Slash,
+                    "=" => Op::Equal,
+                    ">" => Op::Greater,
+                    "<" => Op::Less,
                     _ => unreachable!(),
                 };
 

@@ -86,6 +86,9 @@ impl Interpreter {
             Op::Minus => (RispType::sub as OpFn, RispType::rsub as OpFn),
             Op::Star => (RispType::mul as OpFn, RispType::rmul as OpFn),
             Op::Slash => (RispType::div as OpFn, RispType::rdiv as OpFn),
+            Op::Equal => (RispType::equal as OpFn, RispType::equal as OpFn),
+            Op::Greater => (RispType::greater as OpFn, RispType::less as OpFn),
+            Op::Less => (RispType::less as OpFn, RispType::greater as OpFn)
         };
 
         let mut params = operands.iter();
