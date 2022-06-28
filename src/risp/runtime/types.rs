@@ -62,6 +62,15 @@ pub trait RispType {
     fn rdiv(&self, _other: &Type) -> Option<Type> {
         None
     }
+    fn eq(&self, _other: &Type) -> Option<Type> {
+        None
+    }
+    fn gt(&self, _other: &Type) -> Option<Type> {
+        None
+    }
+    fn lt(&self, _other: &Type) -> Option<Type> {
+        None
+    }
 }
 
 #[derive(Clone)]

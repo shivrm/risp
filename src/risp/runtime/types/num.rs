@@ -48,6 +48,30 @@ impl RispType for Int {
         };
         Some(res)
     }
+    
+    fn eq(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            Type::Int(n) => (self == n).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
+
+    fn gt(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            Type::Int(n) => (self > n).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
+
+    fn lt(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            Type::Int(n) => (self < n).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
 }
 
 impl RispType for Bool {
@@ -138,6 +162,36 @@ impl RispType for Bool {
         };
         Some(res)
     }
+
+    fn eq(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            Type::Bool(b) => (self == b).into(),
+            &Type::Int(n) => ((*self as i32) == n).into(),
+            &Type::Float(f) => ((*self as i32 as f64) == f).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
+
+    fn gt(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            Type::Bool(b) => (self > b).into(),
+            &Type::Int(n) => ((*self as i32) > n).into(),
+            &Type::Float(f) => ((*self as i32 as f64) > f).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
+
+    fn lt(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            Type::Bool(b) => (self < b).into(),
+            &Type::Int(n) => ((*self as i32) < n).into(),
+            &Type::Float(f) => ((*self as i32 as f64) < f).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
 }
 
 impl RispType for Float {
@@ -216,6 +270,33 @@ impl RispType for Float {
     fn rdiv(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::Int(n) => (*n as f64 / self).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
+
+    fn eq(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            &Type::Int(n) => (*self == (n as f64)).into(),
+            Type::Float(f) => (self == f).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
+
+    fn gt(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            &Type::Int(n) => (*self > (n as f64)).into(),
+            Type::Float(f) => (self > f).into(),
+            _ => return None,
+        };
+        Some(res)
+    }
+
+    fn lt(&self, other: &Type) -> Option<Type> {
+        let res = match other {
+            &Type::Int(n) => (*self < (n as f64)).into(),
+            Type::Float(f) => (self < f).into(),
             _ => return None,
         };
         Some(res)
