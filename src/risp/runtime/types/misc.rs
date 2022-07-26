@@ -46,9 +46,9 @@ impl RispType for Str {
         Some(res)
     }
 
-    fn equal(&self, other: &Type) -> Option<Type> {
+    fn equal(&self, other: &Type) -> Option<bool> {
         let res = match other {
-            Type::Str(s) => (self == s).into(),
+            Type::Str(s) => (self == s),
             _ => return None,
         };
         Some(res)
@@ -131,13 +131,9 @@ impl RispType for List {
         Some(res)
     }
 
-    fn equal(&self, other: &Type) -> Option<Type> {
+    fn equal(&self, other: &Type) -> Option<bool> {
         match other {
-            Type::List(l) => self.iter()
-                .zip(l.iter())
-                .map(|(l, r)| l.equal(r))
-                .collect::<Option<List>>()
-                .and_then(|l| Some(l.into())),
+            Type::List(l) => Some((self.len() == l.len()) && self.iter().zip(l).all(|(a,b)| a.equal(b).unwrap_or(false))),
             _ => None,
         }
     }

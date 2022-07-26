@@ -13,7 +13,8 @@ macro_rules! err {
 }
 
 // Operator functions have this type signature
-type OpFn = fn(&Type, &Type) -> Option<Type>;
+type CmpOpFn = fn(&Type, &Type) -> Option<Type>;
+type BinOpFn = fn(&Type, &Type) -> Option<bool>;
 
 /// Interprets ASTs
 pub struct Interpreter {
@@ -82,13 +83,11 @@ impl Interpreter {
         // The interpreter always tries to use the primary fn first. If this is not implemented,
         // then it uses the alternate fn.
         let (primary_fn, alternate_fn) = match op {
-            Op::Plus => (RispType::add as OpFn, RispType::radd as OpFn),
-            Op::Minus => (RispType::sub as OpFn, RispType::rsub as OpFn),
-            Op::Star => (RispType::mul as OpFn, RispType::rmul as OpFn),
-            Op::Slash => (RispType::div as OpFn, RispType::rdiv as OpFn),
-            Op::Equal => (RispType::equal as OpFn, RispType::equal as OpFn),
-            Op::Greater => (RispType::greater as OpFn, RispType::less as OpFn),
-            Op::Less => (RispType::less as OpFn, RispType::greater as OpFn)
+            Op::Plus => (RispType::add as CmpOpFn, RispType::radd as CmpOpFn),
+            Op::Minus => (RispType::sub as CmpOpFn, RispType::rsub as CmpOpFn),
+            Op::Star => (RispType::mul as CmpOpFn, RispType::rmul as CmpOpFn),
+            Op::Slash => (RispType::div as CmpOpFn, RispType::rdiv as CmpOpFn),
+            _ => return self.call_boolean_op(op, operands)
         };
 
         let mut params = operands.iter();
@@ -119,6 +118,38 @@ impl Interpreter {
         Ok(left)
     }
 
+    pub fn call_boolean_op(&self, op: Op, operands: Vec<Type>) -> Result<Type, RuntimeError> {
+        let (primary_fn, alternate_fn) = match op {
+            Op::Equal => (RispType::equal as BinOpFn, RispType::equal as BinOpFn),
+            Op::Greater => (RispType::greater as BinOpFn, RispType::less as BinOpFn),
+            Op::Less => (RispType::less as BinOpFn, RispType::greater as BinOpFn),
+            _ => unreachable!()
+        };
+
+        let mut res = true;
+
+        for window in operands.windows(2) {
+
+            let left = &window[0];
+            let right = &window[1];
+
+            res = match primary_fn(&left, &right) {
+                Some(v) => v,
+                // Use secondary function only if primary function fails
+                None => match alternate_fn(&right, &left) {
+                    Some(v) => v,
+
+                    // If both fail, return an error
+                    None => {
+                        let error_msg = format!("invalid operand types for {}: {} and {}", op.display(), left.type_name(), right.type_name());
+                        return err!(TypeError, error_msg)
+                    },
+                },
+            };
+        }
+
+        Ok(res.into())
+    }
     /// Evaluates an AST node
     pub fn eval(&mut self, node: AstNode) -> Result<Type, RuntimeError> {
         match node {
