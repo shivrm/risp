@@ -4,4 +4,7 @@ pub enum Op {
     Minus,
     Star,
     Slash,
+    Equal,
+    Greater,
+    Less
 }
