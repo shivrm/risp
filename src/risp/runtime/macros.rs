@@ -34,11 +34,21 @@ fn list(inter: &mut Interpreter, nodes: Vec<AstNode>) -> Result<Type, RuntimeErr
     Ok(elems.into())
 }
 
+fn block(inter: &mut Interpreter, nodes: Vec<AstNode>) -> Result<Type, RuntimeError> {
+    let mut res = Type::Null;
+    for node in nodes {
+        res = inter.eval(node)?;
+    }
+
+    Ok(res)
+}
+
 lazy_static! {
     pub static ref SYMBOLS: HashMap<String, Type> = {
         let mut h = HashMap::new();
         h.insert("set".into(), Type::RustMacro(set));
         h.insert("list".into(), Type::RustMacro(list));
+        h.insert("block".into(), Type::RustMacro(block));
         h
     };
 }
