@@ -151,33 +151,33 @@ impl Interpreter {
         Ok(res.into())
     }
     /// Evaluates an AST node
-    pub fn eval(&mut self, node: AstNode) -> Result<Type, RuntimeError> {
+    pub fn eval(&mut self, node: &AstNode) -> Result<Type, RuntimeError> {
         match node {
             AstNode::Name(name) => self.get_name(&name),
 
             // These just involve transposing the value from an AstNode to a Type
-            AstNode::Int(num) => Ok(Type::Int(num)),
-            AstNode::Float(f) => Ok(Type::Float(f)),
-            AstNode::Str(s) => Ok(Type::Str(s)),
-            AstNode::Operator(op) => Ok(Type::Operator(op)),
+            AstNode::Int(num) => Ok(Type::Int(*num)),
+            AstNode::Float(f) => Ok(Type::Float(*f)),
+            AstNode::Str(s) => Ok(Type::Str(s.clone())),
+            AstNode::Operator(op) => Ok(Type::Operator(*op)),
 
-            AstNode::Expr(mut nodes) => {
+            AstNode::Expr(nodes) => {
                 if nodes.is_empty() {
                     return err!(ValueError, "expression is empty");
                 };
                 
                 // Expr has function as first argument and rest are parameters
-                let func = nodes.remove(0);
+                let func = &nodes[0];
                 let func = self.eval(func)?;
 
                 if let Type::RustMacro(mac) = func {
-                    return Ok(mac(self, nodes)?);
+                    return Ok(mac(self, &nodes)?);
                 }
 
                 // Evaluate each parameter
                 let mut params = Vec::new();
                 for node in nodes.iter() {
-                    params.push(self.eval(node.clone())?);
+                    params.push(self.eval(&node)?);
                 }
 
                 // Make sure the function is a callable

@@ -12,7 +12,7 @@ extern crate lazy_static;
 /// Interprets multiple expressions using the same interpreter
 fn interpret_exprs(interpreter: &mut risp::Interpreter, asts: Vec<AstNode>, output: bool) {
     for ast in asts.iter().cloned() {
-        let value = interpreter.eval(ast);
+        let value = interpreter.eval(&ast);
 
         match value {
             Ok(Type::Null) => (),
