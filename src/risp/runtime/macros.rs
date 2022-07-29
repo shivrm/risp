@@ -11,13 +11,13 @@ macro_rules! err {
     };
 }
 
-fn set(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, RuntimeError> {
+fn set(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
     if nodes.len() != 2 {
         return err!(ValueError, format!("expected 2 arguments, found {}", nodes.len()));
     }
 
     if let AstNode::Name(name) = &nodes[0] {
-        let value = inter.eval(&nodes[0]).unwrap();
+        let value = inter.eval(&nodes[1]).unwrap();
         inter.set_name(&name, value.clone());
         Ok(value)
     } else {
@@ -25,7 +25,7 @@ fn set(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, RuntimeErr
     }
 }
 
-fn list(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, RuntimeError> {
+fn list(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
     let mut elems: Vec<Type> = Vec::new();
     for node in nodes {
         elems.push(inter.eval(&node)?);
@@ -34,7 +34,7 @@ fn list(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, RuntimeEr
     Ok(elems.into())
 }
 
-fn block(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, RuntimeError> {
+fn block(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
     let mut res = Type::Null;
     for node in nodes {
         res = inter.eval(&node)?;
@@ -43,7 +43,7 @@ fn block(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, RuntimeE
     Ok(res)
 }
 
-fn if_else(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, RuntimeError> {
+fn if_else(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
     
     let has_else;
     match nodes.len() {
@@ -65,7 +65,7 @@ fn if_else(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, Runtim
     }
 }
 
-fn while_loop(inter: &mut Interpreter, nodes: &Vec<AstNode>) -> Result<Type, RuntimeError> {
+fn while_loop(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
 
     if nodes.len() < 1 {
         return err!(ValueError, "Not enough arguments")

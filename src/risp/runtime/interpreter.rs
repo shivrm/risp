@@ -23,9 +23,6 @@ pub struct Interpreter {
 
 impl Interpreter {
     /// Creates a new interpreter.
-    ///
-    /// Currently, this does not do much. Once a prelude is added, this
-    /// function can be used to initialize it.
     pub fn new() -> Self {
         let default_frame: HashMap<String, Type> = {
             let mut h = HashMap::new();
@@ -171,13 +168,13 @@ impl Interpreter {
                 let func = self.eval(func)?;
 
                 if let Type::RustMacro(mac) = func {
-                    return Ok(mac(self, &nodes)?);
+                    return Ok(mac(self, &nodes[1..])?);
                 }
 
                 // Evaluate each parameter
                 let mut params = Vec::new();
-                for node in nodes.iter() {
-                    params.push(self.eval(&node)?);
+                for node in &nodes[1..] {
+                    params.push(self.eval(node)?);
                 }
 
                 // Make sure the function is a callable

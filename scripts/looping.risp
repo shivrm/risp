@@ -1,0 +1,8 @@
+(set x 0)
+
+(while (< x 10)
+    (println "x is" x)
+    (set x (+ x 1))
+)
+
+(println)

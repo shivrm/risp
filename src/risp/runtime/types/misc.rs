@@ -5,7 +5,7 @@ use crate::risp::runtime::{Interpreter, RuntimeError};
 pub type Str = String;
 pub type List = Vec<Type>;
 pub type RustFn = fn(List) -> Result<List, RuntimeError>;
-pub type RustMacro = fn(&mut Interpreter, &Vec<AstNode>) -> Result<Type, RuntimeError>;
+pub type RustMacro = fn(&mut Interpreter, &[AstNode]) -> Result<Type, RuntimeError>;
 pub struct Null;
 
 
