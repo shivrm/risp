@@ -117,9 +117,9 @@ impl Interpreter {
 
     pub fn call_boolean_op(&self, op: Op, operands: Vec<Type>) -> Result<Type, RuntimeError> {
         let (primary_fn, alternate_fn) = match op {
-            Op::Equal => (RispType::equal as BinOpFn, RispType::equal as BinOpFn),
-            Op::Greater => (RispType::greater as BinOpFn, RispType::less as BinOpFn),
-            Op::Less => (RispType::less as BinOpFn, RispType::greater as BinOpFn),
+            Op::Equal => (RispType::eq as BinOpFn, RispType::eq as BinOpFn),
+            Op::Greater => (RispType::gt as BinOpFn, RispType::lt as BinOpFn),
+            Op::Less => (RispType::lt as BinOpFn, RispType::gt as BinOpFn),
             _ => unreachable!()
         };
 

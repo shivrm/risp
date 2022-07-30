@@ -5,22 +5,6 @@ mod num;
 
 pub use misc::*; pub use num::*;
 
-macro_rules! delegate {
-    ($obj:ident, $name:ident, $( $x:expr ),*) => {
-        match $obj {
-            Type::Int(n)    => n.$name($($x)*),
-            Type::Bool(b)   => b.$name($($x)*),
-            Type::Float(f)  => f.$name($($x)*),
-            Type::Str(s)    => s.$name($($x)*),
-            Type::List(l)   => l.$name($($x)*),
-            Type::RustFn(f) => f.$name($($x)*),
-            Type::RustMacro(f) => f.$name($($x)*),
-            Type::Operator(op) => op.$name($($x)*),
-            Type::Null      => Null.$name($($x)*),
-        }
-    };
-}
-
 macro_rules! derive_from {
     ($($kind:ident),*) => {
         $(
@@ -62,13 +46,13 @@ pub trait RispType {
     fn rdiv(&self, _other: &Type) -> Option<Type> {
         None
     }
-    fn equal(&self, _other: &Type) -> Option<bool> {
+    fn eq(&self, _other: &Type) -> Option<bool> {
         None
     }
-    fn greater(&self, _other: &Type) -> Option<bool> {
+    fn gt(&self, _other: &Type) -> Option<bool> {
         None
     }
-    fn less(&self, _other: &Type) -> Option<bool> {
+    fn lt(&self, _other: &Type) -> Option<bool> {
         None
     }
 }
@@ -87,7 +71,7 @@ pub enum Type {
 }
 
 impl Type {
-    fn unwrap(self) -> Box<dyn RispType> {
+    fn unwrap(&self) -> Box<&dyn RispType> {
         use Type::*;
         match self {
             Int(i) => Box::new(i),
@@ -98,7 +82,7 @@ impl Type {
             RustFn(f) => Box::new(f),
             RustMacro(m) => Box::new(m),
             Operator(op) => Box::new(op),
-            Null => Box::new(misc::Null),
+            Null => Box::new(&misc::Null),
         }
     }
 
@@ -123,54 +107,54 @@ derive_from!(Int, Bool, Float, Str, List, RustFn, RustMacro);
 // Function definitions could be done by a macro 🤔
 impl RispType for Type {
     fn repr(&self) -> String {
-        delegate!(self, repr,)
+        self.unwrap().repr()
     }
     
     fn display(&self) -> String {
-        delegate!(self, display,)
+        self.unwrap().repr()
     }
 
     fn add(&self, other: &Type) -> Option<Type> {
-        delegate!(self, add, other)
+        self.unwrap().add(other)
     }
 
     fn sub(&self, other: &Type) -> Option<Type> {
-        delegate!(self, sub, other)
+        self.unwrap().sub(other)
     }
 
     fn mul(&self, other: &Type) -> Option<Type> {
-        delegate!(self, mul, other)
+        self.unwrap().mul(other)
     }
 
     fn div(&self, other: &Type) -> Option<Type> {
-        delegate!(self, div, other)
+        self.unwrap().div(other)
     }
 
     fn radd(&self, other: &Type) -> Option<Type> {
-        delegate!(self, add, other)
+        self.unwrap().radd(other)
     }
 
     fn rsub(&self, other: &Type) -> Option<Type> {
-        delegate!(self, sub, other)
+        self.unwrap().rsub(other)
     }
 
     fn rmul(&self, other: &Type) -> Option<Type> {
-        delegate!(self, mul, other)
+        self.unwrap().rmul(other)
     }
 
     fn rdiv(&self, other: &Type) -> Option<Type> {
-        delegate!(self, div, other)
+        self.unwrap().rdiv(other)
     }
 
-    fn equal(&self, other: &Type) -> Option<bool> {
-        delegate!(self, equal, other)
+    fn eq(&self, other: &Type) -> Option<bool> {
+        self.unwrap().eq(other)
     }
 
-    fn greater(&self, other: &Type) -> Option<bool> {
-        delegate!(self, greater, other)
+    fn gt(&self, other: &Type) -> Option<bool> {
+        self.unwrap().gt(other)
     }
 
-    fn less(&self, other: &Type) -> Option<bool> {
-        delegate!(self, less, other)
+    fn lt(&self, other: &Type) -> Option<bool> {
+        self.unwrap().lt(other)
     }
 }

@@ -42,7 +42,7 @@ impl RispType for Str {
         Some(res)
     }
 
-    fn equal(&self, other: &Type) -> Option<bool> {
+    fn eq(&self, other: &Type) -> Option<bool> {
         let res = match other {
             Type::Str(s) => (self == s),
             _ => return None,
@@ -123,9 +123,9 @@ impl RispType for List {
         Some(res)
     }
 
-    fn equal(&self, other: &Type) -> Option<bool> {
+    fn eq(&self, other: &Type) -> Option<bool> {
         match other {
-            Type::List(l) => Some((self.len() == l.len()) && self.iter().zip(l).all(|(a,b)| a.equal(b).unwrap_or(false))),
+            Type::List(l) => Some((self.len() == l.len()) && self.iter().zip(l).all(|(a,b)| a.eq(b).unwrap_or(false))),
             _ => None,
         }
     }
