@@ -6,7 +6,7 @@ pub mod macros;
 use std::fmt;
 
 pub use interpreter::Interpreter;
-pub use types::{Type, RispType};
+pub use types::{WrappedType, Type};
 
 #[derive(Debug)]
 pub enum ErrorKind {

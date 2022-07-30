@@ -3,7 +3,7 @@ mod runtime;
 mod shared;
 
 pub use astgen::*;
-pub use runtime::{ErrorKind, Interpreter, RuntimeError, RispType, Type};
+pub use runtime::{ErrorKind, Interpreter, RuntimeError, Type, WrappedType};
 pub use shared::Op;
 
 pub fn to_ast(text: &str) -> Result<Vec<AstNode>, SyntaxError> {

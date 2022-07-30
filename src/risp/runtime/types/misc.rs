@@ -1,15 +1,15 @@
-use super::{Type, RispType};
+use super::{WrappedType, Type};
 use crate::risp::{AstNode, shared::Op};
 use crate::risp::runtime::{Interpreter, RuntimeError};
 
 pub type Str = String;
-pub type List = Vec<Type>;
+pub type List = Vec<WrappedType>;
 pub type RustFn = fn(List) -> Result<List, RuntimeError>;
-pub type RustMacro = fn(&mut Interpreter, &[AstNode]) -> Result<Type, RuntimeError>;
+pub type RustMacro = fn(&mut Interpreter, &[AstNode]) -> Result<WrappedType, RuntimeError>;
 pub struct Null;
 
 
-impl RispType for Str {
+impl Type for Str {
     fn display(&self) -> String {
         self.clone()
     }
@@ -18,40 +18,40 @@ impl RispType for Str {
         format!("{self:?}")
     }
 
-    fn add(&self, other: &Type) -> Option<Type> {
+    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Str(s) => (self.clone() + &s).into(),
+            WrappedType::Str(s) => (self.clone() + &s).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn mul(&self, other: &Type) -> Option<Type> {
+    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => self.repeat(*n as usize).into(),
+            WrappedType::Int(n) => self.repeat(*n as usize).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn rmul(&self, other: &Type) -> Option<Type> {
+    fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => self.repeat(*n as usize).into(),
+            WrappedType::Int(n) => self.repeat(*n as usize).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn eq(&self, other: &Type) -> Option<bool> {
+    fn eq(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            Type::Str(s) => (self == s),
+            WrappedType::Str(s) => (self == s),
             _ => return None,
         };
         Some(res)
     }
 }
 
-impl RispType for List {
+impl Type for List {
     fn repr(&self) -> String {
         let mut iter = self.iter();
 
@@ -89,17 +89,17 @@ impl RispType for List {
         result
     }
 
-    fn add(&self, other: &Type) -> Option<Type> {
+    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::List(el) => self.iter().cloned().chain(el.iter().cloned()).collect::<List>().into(),
+            WrappedType::List(el) => self.iter().cloned().chain(el.iter().cloned()).collect::<List>().into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn mul(&self, other: &Type) -> Option<Type> {
+    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => self.iter()
+            WrappedType::Int(n) => self.iter()
                     .cloned()
                     .cycle()
                     .take(self.len() * *n as usize)
@@ -110,9 +110,9 @@ impl RispType for List {
         Some(res)
     }
 
-    fn rmul(&self, other: &Type) -> Option<Type> {
+    fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => self.iter()
+            WrappedType::Int(n) => self.iter()
                     .cloned()
                     .cycle()
                     .take(self.len() * *n as usize)
@@ -123,15 +123,15 @@ impl RispType for List {
         Some(res)
     }
 
-    fn eq(&self, other: &Type) -> Option<bool> {
+    fn eq(&self, other: &WrappedType) -> Option<bool> {
         match other {
-            Type::List(l) => Some((self.len() == l.len()) && self.iter().zip(l).all(|(a,b)| a.eq(b).unwrap_or(false))),
+            WrappedType::List(l) => Some((self.len() == l.len()) && self.iter().zip(l).all(|(a,b)| a.eq(b).unwrap_or(false))),
             _ => None,
         }
     }
 }
 
-impl RispType for RustFn {
+impl Type for RustFn {
     fn display(&self) -> String {
         "<Rust Function>".to_owned()
     }
@@ -142,7 +142,7 @@ impl RispType for RustFn {
 }
 
 
-impl RispType for RustMacro {
+impl Type for RustMacro {
     fn display(&self) -> String {
         "<Rust Macro>".to_owned()
     }
@@ -152,7 +152,7 @@ impl RispType for RustMacro {
     }
 }
 
-impl RispType for Op {
+impl Type for Op {
     fn display(&self) -> String {
         let value = match self {
             Op::Plus => "+",
@@ -171,7 +171,7 @@ impl RispType for Op {
     }
 }
 
-impl RispType for Null {
+impl Type for Null {
     fn display(&self) -> String {
         "Null".to_owned()
     }

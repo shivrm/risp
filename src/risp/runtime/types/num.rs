@@ -1,10 +1,10 @@
-use super::{Type, RispType};
+use super::{WrappedType, Type};
 
 pub type Int = i32;
 pub type Bool = bool;
 pub type Float = f64;
 
-impl RispType for Int {
+impl Type for Int {
     fn display(&self) -> String {
         self.to_string()
     }
@@ -13,64 +13,64 @@ impl RispType for Int {
         self.to_string()
     }
 
-    fn add(&self, other: &Type) -> Option<Type> {
+    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (self + n).into(),
+            WrappedType::Int(n) => (self + n).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn sub(&self, other: &Type) -> Option<Type> {
+    fn sub(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (self - n).into(),
+            WrappedType::Int(n) => (self - n).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn mul(&self, other: &Type) -> Option<Type> {
+    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (self * n).into(),
+            WrappedType::Int(n) => (self * n).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn div(&self, other: &Type) -> Option<Type> {
+    fn div(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (self / n).into(),
+            WrappedType::Int(n) => (self / n).into(),
             _ => return None,
         };
         Some(res)
     }
     
-    fn eq(&self, other: &Type) -> Option<bool> {
+    fn eq(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            Type::Int(n) => (self == n),
+            WrappedType::Int(n) => (self == n),
             _ => return None,
         };
         Some(res)
     }
 
-    fn gt(&self, other: &Type) -> Option<bool> {
+    fn gt(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            Type::Int(n) => (self > n),
+            WrappedType::Int(n) => (self > n),
             _ => return None,
         };
         Some(res)
     }
 
-    fn lt(&self, other: &Type) -> Option<bool> {
+    fn lt(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            Type::Int(n) => (self < n),
+            WrappedType::Int(n) => (self < n),
             _ => return None,
         };
         Some(res)
     }
 }
 
-impl RispType for Bool {
+impl Type for Bool {
     
 
     fn display(&self) -> String {
@@ -81,114 +81,114 @@ impl RispType for Bool {
         self.to_string()
     }
 
-    fn add(&self, other: &Type) -> Option<Type> {
+    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Bool(b) => (*self as i32 + *b as i32).into(),
-            Type::Int(n) => (*self as i32 + n).into(),
-            Type::Float(f) => ((*self as i32 as f64) + f).into(),
+            WrappedType::Bool(b) => (*self as i32 + *b as i32).into(),
+            WrappedType::Int(n) => (*self as i32 + n).into(),
+            WrappedType::Float(f) => ((*self as i32 as f64) + f).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn sub(&self, other: &Type) -> Option<Type> {
+    fn sub(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Bool(b) => (*self as i32 - *b as i32).into(),
-            Type::Int(n) => (*self as i32 - n).into(),
-            Type::Float(f) => ((*self as i32 as f64) - f).into(),
+            WrappedType::Bool(b) => (*self as i32 - *b as i32).into(),
+            WrappedType::Int(n) => (*self as i32 - n).into(),
+            WrappedType::Float(f) => ((*self as i32 as f64) - f).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn mul(&self, other: &Type) -> Option<Type> {
+    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Bool(b) => (*self as i32 * *b as i32).into(),
-            Type::Int(n) => (*self as i32 * n).into(),
-            Type::Float(f) => ((*self as i32 as f64) * f).into(),
+            WrappedType::Bool(b) => (*self as i32 * *b as i32).into(),
+            WrappedType::Int(n) => (*self as i32 * n).into(),
+            WrappedType::Float(f) => ((*self as i32 as f64) * f).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn div(&self, other: &Type) -> Option<Type> {
+    fn div(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Bool(b) => (*self as i32 / *b as i32).into(),
-            Type::Int(n) => (*self as i32 / n).into(),
-            Type::Float(f) => ((*self as i32 as f64) / f).into(),
+            WrappedType::Bool(b) => (*self as i32 / *b as i32).into(),
+            WrappedType::Int(n) => (*self as i32 / n).into(),
+            WrappedType::Float(f) => ((*self as i32 as f64) / f).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn radd(&self, other: &Type) -> Option<Type> {
+    fn radd(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (n + *self as i32).into(),
-            Type::Float(f) => (f + (*self as i32 as f64)).into(),
+            WrappedType::Int(n) => (n + *self as i32).into(),
+            WrappedType::Float(f) => (f + (*self as i32 as f64)).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn rsub(&self, other: &Type) -> Option<Type> {
+    fn rsub(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (n - *self as i32).into(),
-            Type::Float(f) => (f - (*self as i32 as f64)).into(),
+            WrappedType::Int(n) => (n - *self as i32).into(),
+            WrappedType::Float(f) => (f - (*self as i32 as f64)).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn rmul(&self, other: &Type) -> Option<Type> {
+    fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (n * *self as i32).into(),
-            Type::Float(f) => (f * (*self as i32 as f64)).into(),
+            WrappedType::Int(n) => (n * *self as i32).into(),
+            WrappedType::Float(f) => (f * (*self as i32 as f64)).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn rdiv(&self, other: &Type) -> Option<Type> {
+    fn rdiv(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (n / *self as i32).into(),
-            Type::Float(f) => (f / (*self as i32 as f64)).into(),
+            WrappedType::Int(n) => (n / *self as i32).into(),
+            WrappedType::Float(f) => (f / (*self as i32 as f64)).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn eq(&self, other: &Type) -> Option<bool> {
+    fn eq(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            Type::Bool(b) => (self == b),
-            &Type::Int(n) => ((*self as i32) == n),
-            &Type::Float(f) => ((*self as i32 as f64) == f),
+            WrappedType::Bool(b) => (self == b),
+            &WrappedType::Int(n) => ((*self as i32) == n),
+            &WrappedType::Float(f) => ((*self as i32 as f64) == f),
             _ => return None,
         };
         Some(res)
     }
 
-    fn gt(&self, other: &Type) -> Option<bool> {
+    fn gt(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            Type::Bool(b) => (self > b),
-            &Type::Int(n) => ((*self as i32) > n),
-            &Type::Float(f) => ((*self as i32 as f64) > f),
+            WrappedType::Bool(b) => (self > b),
+            &WrappedType::Int(n) => ((*self as i32) > n),
+            &WrappedType::Float(f) => ((*self as i32 as f64) > f),
             _ => return None,
         };
         Some(res)
     }
 
-    fn lt(&self, other: &Type) -> Option<bool> {
+    fn lt(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            Type::Bool(b) => (self < b),
-            &Type::Int(n) => ((*self as i32) < n),
-            &Type::Float(f) => ((*self as i32 as f64) < f),
+            WrappedType::Bool(b) => (self < b),
+            &WrappedType::Int(n) => ((*self as i32) < n),
+            &WrappedType::Float(f) => ((*self as i32 as f64) < f),
             _ => return None,
         };
         Some(res)
     }
 }
 
-impl RispType for Float {
+impl Type for Float {
     
 
     fn display(&self) -> String {
@@ -199,96 +199,96 @@ impl RispType for Float {
         format!("{self:?}")
     }
 
-    fn add(&self, other: &Type) -> Option<Type> {
+    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (self + *n as f64).into(),
-            Type::Float(f) => (self + f).into(),
+            WrappedType::Int(n) => (self + *n as f64).into(),
+            WrappedType::Float(f) => (self + f).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn sub(&self, other: &Type) -> Option<Type> {
+    fn sub(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (self - *n as f64).into(),
-            Type::Float(f) => (self - f).into(),
+            WrappedType::Int(n) => (self - *n as f64).into(),
+            WrappedType::Float(f) => (self - f).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn mul(&self, other: &Type) -> Option<Type> {
+    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (self * *n as f64).into(),
-            Type::Float(f) => (self * f).into(),
+            WrappedType::Int(n) => (self * *n as f64).into(),
+            WrappedType::Float(f) => (self * f).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn div(&self, other: &Type) -> Option<Type> {
+    fn div(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (self / *n as f64).into(),
-            Type::Float(f) => (self / f).into(),
+            WrappedType::Int(n) => (self / *n as f64).into(),
+            WrappedType::Float(f) => (self / f).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn radd(&self, other: &Type) -> Option<Type> {
+    fn radd(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (*n as f64 + self).into(),
+            WrappedType::Int(n) => (*n as f64 + self).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn rsub(&self, other: &Type) -> Option<Type> {
+    fn rsub(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (*n as f64 - self).into(),
+            WrappedType::Int(n) => (*n as f64 - self).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn rmul(&self, other: &Type) -> Option<Type> {
+    fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (*n as f64 * self).into(),
+            WrappedType::Int(n) => (*n as f64 * self).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn rdiv(&self, other: &Type) -> Option<Type> {
+    fn rdiv(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            Type::Int(n) => (*n as f64 / self).into(),
+            WrappedType::Int(n) => (*n as f64 / self).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn eq(&self, other: &Type) -> Option<bool> {
+    fn eq(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            &Type::Int(n) => (*self == (n as f64)),
-            Type::Float(f) => (self == f),
+            &WrappedType::Int(n) => (*self == (n as f64)),
+            WrappedType::Float(f) => (self == f),
             _ => return None,
         };
         Some(res)
     }
 
-    fn gt(&self, other: &Type) -> Option<bool> {
+    fn gt(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            &Type::Int(n) => (*self > (n as f64)),
-            Type::Float(f) => (self > f),
+            &WrappedType::Int(n) => (*self > (n as f64)),
+            WrappedType::Float(f) => (self > f),
             _ => return None,
         };
         Some(res)
     }
 
-    fn lt(&self, other: &Type) -> Option<bool> {
+    fn lt(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
-            &Type::Int(n) => (*self < (n as f64)),
-            Type::Float(f) => (self < f),
+            &WrappedType::Int(n) => (*self < (n as f64)),
+            WrappedType::Float(f) => (self < f),
             _ => return None,
         };
         Some(res)

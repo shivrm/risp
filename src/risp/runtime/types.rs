@@ -8,57 +8,57 @@ pub use misc::*; pub use num::*;
 macro_rules! derive_from {
     ($($kind:ident),*) => {
         $(
-        impl From<$kind> for Type {
+        impl From<$kind> for WrappedType {
             fn from(item: $kind) -> Self {
-                Type::$kind(item)
+                WrappedType::$kind(item)
             }
         }
         )*
     };
 }
 
-pub trait RispType {
+pub trait Type {
     fn repr(&self) -> String;
     fn display(&self) -> String;
     
 
-    fn add(&self, _other: &Type) -> Option<Type> {
+    fn add(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
     }
-    fn sub(&self, _other: &Type) -> Option<Type> {
+    fn sub(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
     }
-    fn mul(&self, _other: &Type) -> Option<Type> {
+    fn mul(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
     }
-    fn div(&self, _other: &Type) -> Option<Type> {
+    fn div(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
     }
-    fn radd(&self, _other: &Type) -> Option<Type> {
+    fn radd(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
     }
-    fn rsub(&self, _other: &Type) -> Option<Type> {
+    fn rsub(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
     }
-    fn rmul(&self, _other: &Type) -> Option<Type> {
+    fn rmul(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
     }
-    fn rdiv(&self, _other: &Type) -> Option<Type> {
+    fn rdiv(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
     }
-    fn eq(&self, _other: &Type) -> Option<bool> {
+    fn eq(&self, _other: &WrappedType) -> Option<bool> {
         None
     }
-    fn gt(&self, _other: &Type) -> Option<bool> {
+    fn gt(&self, _other: &WrappedType) -> Option<bool> {
         None
     }
-    fn lt(&self, _other: &Type) -> Option<bool> {
+    fn lt(&self, _other: &WrappedType) -> Option<bool> {
         None
     }
 }
 
 #[derive(Clone)]
-pub enum Type {
+pub enum WrappedType {
     Int(Int),
     Bool(Bool),
     Float(Float),
@@ -70,9 +70,9 @@ pub enum Type {
     Null,
 }
 
-impl Type {
-    fn unwrap(&self) -> Box<&dyn RispType> {
-        use Type::*;
+impl WrappedType {
+    fn unwrap(&self) -> Box<&dyn Type> {
+        use WrappedType::*;
         match self {
             Int(i) => Box::new(i),
             Bool(b) => Box::new(b),
@@ -87,7 +87,7 @@ impl Type {
     }
 
     pub fn type_name(&self) -> String {
-        use Type::*;
+        use WrappedType::*;
         match self {
             Int(_) => "int",
             Bool(_) => "bool",
@@ -105,7 +105,7 @@ impl Type {
 derive_from!(Int, Bool, Float, Str, List, RustFn, RustMacro);
 
 // Function definitions could be done by a macro 🤔
-impl RispType for Type {
+impl Type for WrappedType {
     fn repr(&self) -> String {
         self.unwrap().repr()
     }
@@ -114,47 +114,47 @@ impl RispType for Type {
         self.unwrap().repr()
     }
 
-    fn add(&self, other: &Type) -> Option<Type> {
+    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
         self.unwrap().add(other)
     }
 
-    fn sub(&self, other: &Type) -> Option<Type> {
+    fn sub(&self, other: &WrappedType) -> Option<WrappedType> {
         self.unwrap().sub(other)
     }
 
-    fn mul(&self, other: &Type) -> Option<Type> {
+    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
         self.unwrap().mul(other)
     }
 
-    fn div(&self, other: &Type) -> Option<Type> {
+    fn div(&self, other: &WrappedType) -> Option<WrappedType> {
         self.unwrap().div(other)
     }
 
-    fn radd(&self, other: &Type) -> Option<Type> {
+    fn radd(&self, other: &WrappedType) -> Option<WrappedType> {
         self.unwrap().radd(other)
     }
 
-    fn rsub(&self, other: &Type) -> Option<Type> {
+    fn rsub(&self, other: &WrappedType) -> Option<WrappedType> {
         self.unwrap().rsub(other)
     }
 
-    fn rmul(&self, other: &Type) -> Option<Type> {
+    fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
         self.unwrap().rmul(other)
     }
 
-    fn rdiv(&self, other: &Type) -> Option<Type> {
+    fn rdiv(&self, other: &WrappedType) -> Option<WrappedType> {
         self.unwrap().rdiv(other)
     }
 
-    fn eq(&self, other: &Type) -> Option<bool> {
+    fn eq(&self, other: &WrappedType) -> Option<bool> {
         self.unwrap().eq(other)
     }
 
-    fn gt(&self, other: &Type) -> Option<bool> {
+    fn gt(&self, other: &WrappedType) -> Option<bool> {
         self.unwrap().gt(other)
     }
 
-    fn lt(&self, other: &Type) -> Option<bool> {
+    fn lt(&self, other: &WrappedType) -> Option<bool> {
         self.unwrap().lt(other)
     }
 }

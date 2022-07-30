@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::risp::AstNode;
-use super::{Interpreter, Type, RuntimeError, ErrorKind};
+use super::{Interpreter, WrappedType, RuntimeError, ErrorKind};
 
 macro_rules! err {
     ($kind:ident, $msg:expr) => {
@@ -11,7 +11,7 @@ macro_rules! err {
     };
 }
 
-fn set(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
+fn set(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<WrappedType, RuntimeError> {
     if nodes.len() != 2 {
         return err!(ValueError, format!("expected 2 arguments, found {}", nodes.len()));
     }
@@ -25,8 +25,8 @@ fn set(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError>
     }
 }
 
-fn list(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
-    let mut elems: Vec<Type> = Vec::new();
+fn list(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<WrappedType, RuntimeError> {
+    let mut elems: Vec<WrappedType> = Vec::new();
     for node in nodes {
         elems.push(inter.eval(&node)?);
     };
@@ -34,8 +34,8 @@ fn list(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError
     Ok(elems.into())
 }
 
-fn block(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
-    let mut res = Type::Null;
+fn block(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<WrappedType, RuntimeError> {
+    let mut res = WrappedType::Null;
     for node in nodes {
         res = inter.eval(&node)?;
     }
@@ -43,7 +43,7 @@ fn block(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeErro
     Ok(res)
 }
 
-fn if_else(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
+fn if_else(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<WrappedType, RuntimeError> {
     
     let has_else;
     match nodes.len() {
@@ -55,26 +55,26 @@ fn if_else(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeEr
     let cond = &nodes[0];
     let if_expr = &nodes[1];
 
-    if let Type::Bool(true) = inter.eval(cond)? {
+    if let WrappedType::Bool(true) = inter.eval(cond)? {
         inter.eval(if_expr)
     } else {
-        if has_else == false { return Ok(Type::Null) }
+        if has_else == false { return Ok(WrappedType::Null) }
         
         let else_expr = &nodes[2];
         inter.eval(&else_expr)
     }
 }
 
-fn while_loop(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, RuntimeError> {
+fn while_loop(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<WrappedType, RuntimeError> {
 
     if nodes.len() < 1 {
         return err!(ValueError, "Not enough arguments")
     }
 
     let condition = &nodes[0];
-    let mut value = Type::Null;
+    let mut value = WrappedType::Null;
 
-    while let Type::Bool(true) = inter.eval(condition)? {
+    while let WrappedType::Bool(true) = inter.eval(condition)? {
         value = block(inter, &nodes)?
     }
 
@@ -82,13 +82,13 @@ fn while_loop(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Type, Runtim
 }
 
 lazy_static! {
-    pub static ref SYMBOLS: HashMap<String, Type> = {
+    pub static ref SYMBOLS: HashMap<String, WrappedType> = {
         let mut h = HashMap::new();
-        h.insert("set".into(), Type::RustMacro(set));
-        h.insert("list".into(), Type::RustMacro(list));
-        h.insert("block".into(), Type::RustMacro(block));
-        h.insert("if".into(), Type::RustMacro(if_else));
-        h.insert("while".into(), Type::RustMacro(while_loop));
+        h.insert("set".into(), WrappedType::RustMacro(set));
+        h.insert("list".into(), WrappedType::RustMacro(list));
+        h.insert("block".into(), WrappedType::RustMacro(block));
+        h.insert("if".into(), WrappedType::RustMacro(if_else));
+        h.insert("while".into(), WrappedType::RustMacro(while_loop));
         h
     };
 }

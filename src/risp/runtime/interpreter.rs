@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{rispstd, macros, ErrorKind, RuntimeError, RispType, Type};
+use super::{rispstd, macros, ErrorKind, RuntimeError, Type, WrappedType};
 use crate::risp::{AstNode, shared::Op};
 
 macro_rules! err {
@@ -13,23 +13,23 @@ macro_rules! err {
 }
 
 // Operator functions have this type signature
-type CmpOpFn = fn(&Type, &Type) -> Option<Type>;
-type BinOpFn = fn(&Type, &Type) -> Option<bool>;
+type CmpOpFn = fn(&WrappedType, &WrappedType) -> Option<WrappedType>;
+type BinOpFn = fn(&WrappedType, &WrappedType) -> Option<bool>;
 
 /// Interprets ASTs
 pub struct Interpreter {
-    frame: HashMap<String, Type>
+    frame: HashMap<String, WrappedType>
 }
 
 impl Interpreter {
     /// Creates a new interpreter.
     pub fn new() -> Self {
-        let default_frame: HashMap<String, Type> = {
+        let default_frame: HashMap<String, WrappedType> = {
             let mut h = HashMap::new();
             h.extend(rispstd::SYMBOLS.clone().into_iter());
             h.extend(macros::SYMBOLS.clone().into_iter());
-            h.insert("true".into(), Type::Bool(true));
-            h.insert("false".into(), Type::Bool(false));
+            h.insert("true".into(), WrappedType::Bool(true));
+            h.insert("false".into(), WrappedType::Bool(false));
             h
         };
 
@@ -38,14 +38,14 @@ impl Interpreter {
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     /// Currently, this just gets them from the SYMBOLS HashMap in the standard library.
-    pub fn get_name(&self, name: &str) -> Result<Type, RuntimeError> {
+    pub fn get_name(&self, name: &str) -> Result<WrappedType, RuntimeError> {
         match self.frame.get(name) {
             Some(value) => Ok(value.clone()),
             None => err!(NameError, format!("{name} is not defined")),
         }
     }
 
-    pub fn set_name(&mut self, name: &str, value: Type) {
+    pub fn set_name(&mut self, name: &str, value: WrappedType) {
         self.frame.insert(name.into(), value);
     }
 
@@ -53,18 +53,18 @@ impl Interpreter {
     /// and return a `Vec<Type>`.
     pub fn call_rustfn(
         &self,
-        func: fn(Vec<Type>) -> Result<Vec<Type>, RuntimeError>,
-        params: Vec<Type>,
-    ) -> Result<Type, RuntimeError> {
+        func: fn(Vec<WrappedType>) -> Result<Vec<WrappedType>, RuntimeError>,
+        params: Vec<WrappedType>,
+    ) -> Result<WrappedType, RuntimeError> {
         let result = func(params)?;
 
         // Returns Null if the function returns an empty Vec.
         // If the Vec contains one value, returns the value
         // If the Vec contains more than one value, returns it as a list
         let result = match result.len() {
-            0 => Type::Null,
+            0 => WrappedType::Null,
             1 => result[0].clone(),
-            _ => Type::List(result),
+            _ => WrappedType::List(result),
         };
 
         Ok(result)
@@ -74,16 +74,16 @@ impl Interpreter {
     ///
     /// This operator is evaluated similar to a `.reduce()`.
     /// i.e., `(+ a b c d)` will be evaluated as `((a + b) + c) + d`
-    pub fn call_operator(&self, op: Op, operands: Vec<Type>) -> Result<Type, RuntimeError> {
+    pub fn call_operator(&self, op: Op, operands: Vec<WrappedType>) -> Result<WrappedType, RuntimeError> {
         // a + b can be evaluated as `a.add(b)` or as `b.radd(a)`. This is useful when
         // a does not directly implement `add` for b.
         // The interpreter always tries to use the primary fn first. If this is not implemented,
         // then it uses the alternate fn.
         let (primary_fn, alternate_fn) = match op {
-            Op::Plus => (RispType::add as CmpOpFn, RispType::radd as CmpOpFn),
-            Op::Minus => (RispType::sub as CmpOpFn, RispType::rsub as CmpOpFn),
-            Op::Star => (RispType::mul as CmpOpFn, RispType::rmul as CmpOpFn),
-            Op::Slash => (RispType::div as CmpOpFn, RispType::rdiv as CmpOpFn),
+            Op::Plus => (Type::add as CmpOpFn, Type::radd as CmpOpFn),
+            Op::Minus => (Type::sub as CmpOpFn, Type::rsub as CmpOpFn),
+            Op::Star => (Type::mul as CmpOpFn, Type::rmul as CmpOpFn),
+            Op::Slash => (Type::div as CmpOpFn, Type::rdiv as CmpOpFn),
             _ => return self.call_boolean_op(op, operands)
         };
 
@@ -115,11 +115,11 @@ impl Interpreter {
         Ok(left)
     }
 
-    pub fn call_boolean_op(&self, op: Op, operands: Vec<Type>) -> Result<Type, RuntimeError> {
+    pub fn call_boolean_op(&self, op: Op, operands: Vec<WrappedType>) -> Result<WrappedType, RuntimeError> {
         let (primary_fn, alternate_fn) = match op {
-            Op::Equal => (RispType::eq as BinOpFn, RispType::eq as BinOpFn),
-            Op::Greater => (RispType::gt as BinOpFn, RispType::lt as BinOpFn),
-            Op::Less => (RispType::lt as BinOpFn, RispType::gt as BinOpFn),
+            Op::Equal => (Type::eq as BinOpFn, Type::eq as BinOpFn),
+            Op::Greater => (Type::gt as BinOpFn, Type::lt as BinOpFn),
+            Op::Less => (Type::lt as BinOpFn, Type::gt as BinOpFn),
             _ => unreachable!()
         };
 
@@ -148,15 +148,15 @@ impl Interpreter {
         Ok(res.into())
     }
     /// Evaluates an AST node
-    pub fn eval(&mut self, node: &AstNode) -> Result<Type, RuntimeError> {
+    pub fn eval(&mut self, node: &AstNode) -> Result<WrappedType, RuntimeError> {
         match node {
             AstNode::Name(name) => self.get_name(&name),
 
             // These just involve transposing the value from an AstNode to a Type
-            AstNode::Int(num) => Ok(Type::Int(*num)),
-            AstNode::Float(f) => Ok(Type::Float(*f)),
-            AstNode::Str(s) => Ok(Type::Str(s.clone())),
-            AstNode::Operator(op) => Ok(Type::Operator(*op)),
+            AstNode::Int(num) => Ok(WrappedType::Int(*num)),
+            AstNode::Float(f) => Ok(WrappedType::Float(*f)),
+            AstNode::Str(s) => Ok(WrappedType::Str(s.clone())),
+            AstNode::Operator(op) => Ok(WrappedType::Operator(*op)),
 
             AstNode::Expr(nodes) => {
                 if nodes.is_empty() {
@@ -167,7 +167,7 @@ impl Interpreter {
                 let func = &nodes[0];
                 let func = self.eval(func)?;
 
-                if let Type::RustMacro(mac) = func {
+                if let WrappedType::RustMacro(mac) = func {
                     return Ok(mac(self, &nodes[1..])?);
                 }
 
@@ -179,9 +179,9 @@ impl Interpreter {
 
                 // Make sure the function is a callable
                 match func {
-                    Type::RustFn(f) => self.call_rustfn(f, params),
+                    WrappedType::RustFn(f) => self.call_rustfn(f, params),
 
-                    Type::Operator(op) => self.call_operator(op, params),
+                    WrappedType::Operator(op) => self.call_operator(op, params),
 
                     _ => err!(TypeError, format!("{} is not callable", func.type_name())),
                 }
