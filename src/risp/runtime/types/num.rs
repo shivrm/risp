@@ -1,4 +1,4 @@
-use super::{WrappedType, Type};
+use super::{Type, WrappedType};
 
 pub type Int = i32;
 pub type Bool = bool;
@@ -44,7 +44,7 @@ impl Type for Int {
         };
         Some(res)
     }
-    
+
     fn eq(&self, other: &WrappedType) -> Option<bool> {
         let res = match other {
             WrappedType::Int(n) => (self == n),
@@ -71,8 +71,6 @@ impl Type for Int {
 }
 
 impl Type for Bool {
-    
-
     fn display(&self) -> String {
         self.to_string()
     }
@@ -189,8 +187,6 @@ impl Type for Bool {
 }
 
 impl Type for Float {
-    
-
     fn display(&self) -> String {
         format!("{self:?}")
     }

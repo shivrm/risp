@@ -1,9 +1,10 @@
-use crate::risp::{Op};
+use crate::risp::Op;
 
 mod misc;
 mod num;
 
-pub use misc::*; pub use num::*;
+pub use misc::*;
+pub use num::*;
 
 macro_rules! derive_from {
     ($($kind:ident),*) => {
@@ -20,7 +21,6 @@ macro_rules! derive_from {
 pub trait Type {
     fn repr(&self) -> String;
     fn display(&self) -> String;
-    
 
     fn add(&self, _other: &WrappedType) -> Option<WrappedType> {
         None
@@ -98,7 +98,8 @@ impl WrappedType {
             RustMacro(_) => "rustmacro",
             Operator(_) => "operator",
             Null => "null",
-        }.into()
+        }
+        .into()
     }
 }
 
@@ -109,7 +110,7 @@ impl Type for WrappedType {
     fn repr(&self) -> String {
         self.unwrap().repr()
     }
-    
+
     fn display(&self) -> String {
         self.unwrap().repr()
     }

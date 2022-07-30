@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
-use super::{rispstd, macros, ErrorKind, RuntimeError, Type, WrappedType};
-use crate::risp::{AstNode, shared::Op};
+use super::{macros, rispstd, ErrorKind, RuntimeError, Type, WrappedType};
+use crate::risp::{shared::Op, AstNode};
 
 macro_rules! err {
     ($kind:ident, $msg:expr) => {
         Err(RuntimeError {
             kind: ErrorKind::$kind,
-            msg: $msg.into()
+            msg: $msg.into(),
         })
     };
 }
@@ -18,7 +18,7 @@ type BinOpFn = fn(&WrappedType, &WrappedType) -> Option<bool>;
 
 /// Interprets ASTs
 pub struct Interpreter {
-    frame: HashMap<String, WrappedType>
+    frame: HashMap<String, WrappedType>,
 }
 
 impl Interpreter {
@@ -33,7 +33,9 @@ impl Interpreter {
             h
         };
 
-        Self { frame: default_frame }
+        Self {
+            frame: default_frame,
+        }
     }
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
@@ -74,7 +76,11 @@ impl Interpreter {
     ///
     /// This operator is evaluated similar to a `.reduce()`.
     /// i.e., `(+ a b c d)` will be evaluated as `((a + b) + c) + d`
-    pub fn call_operator(&self, op: Op, operands: Vec<WrappedType>) -> Result<WrappedType, RuntimeError> {
+    pub fn call_operator(
+        &self,
+        op: Op,
+        operands: Vec<WrappedType>,
+    ) -> Result<WrappedType, RuntimeError> {
         // a + b can be evaluated as `a.add(b)` or as `b.radd(a)`. This is useful when
         // a does not directly implement `add` for b.
         // The interpreter always tries to use the primary fn first. If this is not implemented,
@@ -84,7 +90,7 @@ impl Interpreter {
             Op::Minus => (Type::sub as CmpOpFn, Type::rsub as CmpOpFn),
             Op::Star => (Type::mul as CmpOpFn, Type::rmul as CmpOpFn),
             Op::Slash => (Type::div as CmpOpFn, Type::rdiv as CmpOpFn),
-            _ => return self.call_boolean_op(op, operands)
+            _ => return self.call_boolean_op(op, operands),
         };
 
         let mut params = operands.iter();
@@ -105,9 +111,14 @@ impl Interpreter {
 
                     // If both fail, return an error
                     None => {
-                        let error_msg = format!("invalid operand types for {}: {} and {}", op.display(), left.type_name(), right.type_name());
-                        return err!(TypeError, error_msg)
-                    },
+                        let error_msg = format!(
+                            "invalid operand types for {}: {} and {}",
+                            op.display(),
+                            left.type_name(),
+                            right.type_name()
+                        );
+                        return err!(TypeError, error_msg);
+                    }
                 },
             };
         }
@@ -115,18 +126,21 @@ impl Interpreter {
         Ok(left)
     }
 
-    pub fn call_boolean_op(&self, op: Op, operands: Vec<WrappedType>) -> Result<WrappedType, RuntimeError> {
+    pub fn call_boolean_op(
+        &self,
+        op: Op,
+        operands: Vec<WrappedType>,
+    ) -> Result<WrappedType, RuntimeError> {
         let (primary_fn, alternate_fn) = match op {
             Op::Equal => (Type::eq as BinOpFn, Type::eq as BinOpFn),
             Op::Greater => (Type::gt as BinOpFn, Type::lt as BinOpFn),
             Op::Less => (Type::lt as BinOpFn, Type::gt as BinOpFn),
-            _ => unreachable!()
+            _ => unreachable!(),
         };
 
         let mut res = true;
 
         for window in operands.windows(2) {
-
             let left = &window[0];
             let right = &window[1];
 
@@ -138,9 +152,14 @@ impl Interpreter {
 
                     // If both fail, return an error
                     None => {
-                        let error_msg = format!("invalid operand types for {}: {} and {}", op.display(), left.type_name(), right.type_name());
-                        return err!(TypeError, error_msg)
-                    },
+                        let error_msg = format!(
+                            "invalid operand types for {}: {} and {}",
+                            op.display(),
+                            left.type_name(),
+                            right.type_name()
+                        );
+                        return err!(TypeError, error_msg);
+                    }
                 },
             };
         }
@@ -162,7 +181,7 @@ impl Interpreter {
                 if nodes.is_empty() {
                     return err!(ValueError, "expression is empty");
                 };
-                
+
                 // Expr has function as first argument and rest are parameters
                 let func = &nodes[0];
                 let func = self.eval(func)?;

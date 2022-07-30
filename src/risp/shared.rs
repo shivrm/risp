@@ -6,5 +6,5 @@ pub enum Op {
     Slash,
     Equal,
     Greater,
-    Less
+    Less,
 }

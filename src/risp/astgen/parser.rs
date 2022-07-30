@@ -1,5 +1,5 @@
+use super::{AstNode, Lexer, SyntaxError, Token, TokenKind};
 use crate::risp::shared::Op;
-use super::{SyntaxError, AstNode, Lexer, Token, TokenKind};
 
 /// Parses tokens from a Lexer into abstract syntax trees (ASTs).
 pub struct Parser<'a> {
@@ -73,13 +73,12 @@ impl<'a> Parser<'a> {
 
             TokenKind::Name => AstNode::Name(content.into()),
 
-
             // No other token should ever occur in an atom
             // `(` case is already covered in parse_expr
             t => {
                 let error_msg = format!("unexpected {t:?} while parsing atom");
-                return Err(SyntaxError(error_msg))
-            },
+                return Err(SyntaxError(error_msg));
+            }
         };
 
         return Ok(node);

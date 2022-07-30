@@ -1,6 +1,6 @@
-use std::time::{Duration, Instant};
-use std::fs;
 use crate::risp::{Lexer, TokenKind};
+use std::fs;
+use std::time::{Duration, Instant};
 
 /// Used to benchmark a function
 fn bench(mut func: impl FnMut(), num: u32, samples: u32) -> Duration {
@@ -22,7 +22,7 @@ fn bench(mut func: impl FnMut(), num: u32, samples: u32) -> Duration {
         }
         tot += elapsed;
     }
-    
+
     println!("Total elapsed: {:?}", tot);
     let avg = (tot / 100) / num;
     println!(
@@ -36,8 +36,8 @@ fn bench(mut func: impl FnMut(), num: u32, samples: u32) -> Duration {
 
 /// Wrapper function for `benchmark`. Tests the speed of the lexer
 pub fn lex_speed() {
-    let src = fs::read_to_string("scripts/example.risp")
-        .expect("Could not open scripts/example.risp");
+    let src =
+        fs::read_to_string("scripts/example.risp").expect("Could not open scripts/example.risp");
 
     // Function to benchmark. Creates a lexer and lexes the entire source file each time
     // Source file must not contain any errors

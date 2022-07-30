@@ -1,23 +1,23 @@
 mod interpreter;
-mod types;
-pub mod rispstd;
 pub mod macros;
+pub mod rispstd;
+mod types;
 
 use std::fmt;
 
 pub use interpreter::Interpreter;
-pub use types::{WrappedType, Type};
+pub use types::{Type, WrappedType};
 
 #[derive(Debug)]
 pub enum ErrorKind {
     NameError,
     TypeError,
-    ValueError
+    ValueError,
 }
 
 pub struct RuntimeError {
     pub kind: ErrorKind,
-    pub msg: String
+    pub msg: String,
 }
 
 impl fmt::Debug for RuntimeError {

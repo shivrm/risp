@@ -18,7 +18,7 @@ fn interpret_exprs(interpreter: &mut risp::Interpreter, asts: Vec<AstNode>, outp
             Ok(WrappedType::Null) => (),
             Ok(v) if output => println!("{}", v.repr()),
             Err(err) => eprintln!("{err:?}"),
-            _ => ()
+            _ => (),
         }
     }
 }

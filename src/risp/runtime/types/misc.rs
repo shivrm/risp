@@ -1,13 +1,12 @@
-use super::{WrappedType, Type};
-use crate::risp::{AstNode, shared::Op};
+use super::{Type, WrappedType};
 use crate::risp::runtime::{Interpreter, RuntimeError};
+use crate::risp::{shared::Op, AstNode};
 
 pub type Str = String;
 pub type List = Vec<WrappedType>;
 pub type RustFn = fn(List) -> Result<List, RuntimeError>;
 pub type RustMacro = fn(&mut Interpreter, &[AstNode]) -> Result<WrappedType, RuntimeError>;
 pub struct Null;
-
 
 impl Type for Str {
     fn display(&self) -> String {
@@ -91,7 +90,12 @@ impl Type for List {
 
     fn add(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            WrappedType::List(el) => self.iter().cloned().chain(el.iter().cloned()).collect::<List>().into(),
+            WrappedType::List(el) => self
+                .iter()
+                .cloned()
+                .chain(el.iter().cloned())
+                .collect::<List>()
+                .into(),
             _ => return None,
         };
         Some(res)
@@ -99,12 +103,13 @@ impl Type for List {
 
     fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            WrappedType::Int(n) => self.iter()
-                    .cloned()
-                    .cycle()
-                    .take(self.len() * *n as usize)
-                    .collect::<List>()
-                    .into(),
+            WrappedType::Int(n) => self
+                .iter()
+                .cloned()
+                .cycle()
+                .take(self.len() * *n as usize)
+                .collect::<List>()
+                .into(),
             _ => return None,
         };
         Some(res)
@@ -112,12 +117,13 @@ impl Type for List {
 
     fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
         let res = match other {
-            WrappedType::Int(n) => self.iter()
-                    .cloned()
-                    .cycle()
-                    .take(self.len() * *n as usize)
-                    .collect::<List>()
-                    .into(),
+            WrappedType::Int(n) => self
+                .iter()
+                .cloned()
+                .cycle()
+                .take(self.len() * *n as usize)
+                .collect::<List>()
+                .into(),
             _ => return None,
         };
         Some(res)
@@ -125,7 +131,10 @@ impl Type for List {
 
     fn eq(&self, other: &WrappedType) -> Option<bool> {
         match other {
-            WrappedType::List(l) => Some((self.len() == l.len()) && self.iter().zip(l).all(|(a,b)| a.eq(b).unwrap_or(false))),
+            WrappedType::List(l) => Some(
+                (self.len() == l.len())
+                    && self.iter().zip(l).all(|(a, b)| a.eq(b).unwrap_or(false)),
+            ),
             _ => None,
         }
     }
@@ -140,7 +149,6 @@ impl Type for RustFn {
         self.display()
     }
 }
-
 
 impl Type for RustMacro {
     fn display(&self) -> String {
