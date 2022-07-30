@@ -8,3 +8,8 @@ description = "A LISP-like language"
 
 [dependencies]
 lazy_static = "1.4.0"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1

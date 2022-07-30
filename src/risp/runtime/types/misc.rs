@@ -18,10 +18,6 @@ impl RispType for Str {
         format!("{self:?}")
     }
 
-    fn type_name(&self) -> String {
-        return "str".into()
-    }
-
     fn add(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::Str(s) => (self.clone() + &s).into(),
@@ -93,10 +89,6 @@ impl RispType for List {
         result
     }
 
-    fn type_name(&self) -> String {
-        return "list".into()
-    }
-
     fn add(&self, other: &Type) -> Option<Type> {
         let res = match other {
             Type::List(el) => self.iter().cloned().chain(el.iter().cloned()).collect::<List>().into(),
@@ -147,10 +139,6 @@ impl RispType for RustFn {
     fn repr(&self) -> String {
         self.display()
     }
-
-    fn type_name(&self) -> String {
-        return "rustfn".into()
-    }
 }
 
 
@@ -161,10 +149,6 @@ impl RispType for RustMacro {
 
     fn repr(&self) -> String {
         self.display()
-    }
-
-    fn type_name(&self) -> String {
-        return "rustmacro".into()
     }
 }
 
@@ -185,10 +169,6 @@ impl RispType for Op {
     fn repr(&self) -> String {
         self.display()
     }
-
-    fn type_name(&self) -> String {
-        return "operator".into()
-    }
 }
 
 impl RispType for Null {
@@ -198,9 +178,5 @@ impl RispType for Null {
 
     fn repr(&self) -> String {
         String::new()
-    }
-
-    fn type_name(&self) -> String {
-        return "null".into()
     }
 }

@@ -36,8 +36,8 @@ macro_rules! derive_from {
 pub trait RispType {
     fn repr(&self) -> String;
     fn display(&self) -> String;
-    fn type_name(&self) -> String;
     
+
     fn add(&self, _other: &Type) -> Option<Type> {
         None
     }
@@ -86,6 +86,38 @@ pub enum Type {
     Null,
 }
 
+impl Type {
+    fn unwrap(self) -> Box<dyn RispType> {
+        use Type::*;
+        match self {
+            Int(i) => Box::new(i),
+            Bool(b) => Box::new(b),
+            Float(f) => Box::new(f),
+            Str(s) => Box::new(s),
+            List(l) => Box::new(l),
+            RustFn(f) => Box::new(f),
+            RustMacro(m) => Box::new(m),
+            Operator(op) => Box::new(op),
+            Null => Box::new(misc::Null),
+        }
+    }
+
+    pub fn type_name(&self) -> String {
+        use Type::*;
+        match self {
+            Int(_) => "int",
+            Bool(_) => "bool",
+            Float(_) => "float",
+            Str(_) => "str",
+            List(_) => "list",
+            RustFn(_) => "rustfn",
+            RustMacro(_) => "rustmacro",
+            Operator(_) => "operator",
+            Null => "null",
+        }.into()
+    }
+}
+
 derive_from!(Int, Bool, Float, Str, List, RustFn, RustMacro);
 
 // Function definitions could be done by a macro 🤔
@@ -96,10 +128,6 @@ impl RispType for Type {
     
     fn display(&self) -> String {
         delegate!(self, display,)
-    }
-    
-    fn type_name(&self) -> String {
-        delegate!(self, type_name,)
     }
 
     fn add(&self, other: &Type) -> Option<Type> {

@@ -5,16 +5,14 @@ pub type Bool = bool;
 pub type Float = f64;
 
 impl RispType for Int {
+    
+
     fn display(&self) -> String {
         self.to_string()
     }
 
     fn repr(&self) -> String {
         self.to_string()
-    }
-
-    fn type_name(&self) -> String {
-        return "int".into()
     }
 
     fn add(&self, other: &Type) -> Option<Type> {
@@ -75,16 +73,14 @@ impl RispType for Int {
 }
 
 impl RispType for Bool {
+    
+
     fn display(&self) -> String {
         self.to_string()
     }
 
     fn repr(&self) -> String {
         self.to_string()
-    }
-
-    fn type_name(&self) -> String {
-        return "bool".into()
     }
 
     fn add(&self, other: &Type) -> Option<Type> {
@@ -195,16 +191,14 @@ impl RispType for Bool {
 }
 
 impl RispType for Float {
+    
+
     fn display(&self) -> String {
         format!("{self:?}")
     }
 
     fn repr(&self) -> String {
         format!("{self:?}")
-    }
-
-    fn type_name(&self) -> String {
-        return "float".into()
     }
 
     fn add(&self, other: &Type) -> Option<Type> {
