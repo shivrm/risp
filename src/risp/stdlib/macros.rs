@@ -1,4 +1,4 @@
-use super::{ErrorKind, Interpreter, RuntimeError, Value};
+use crate::risp::vm::{ErrorKind, Interpreter, RuntimeError, Value};
 use crate::risp::AstNode;
 use std::collections::HashMap;
 
@@ -24,7 +24,7 @@ fn set(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Value, RuntimeError
         inter.set_name(&name, value.clone());
         Ok(value)
     } else {
-        return err!(ValueError, format!("first argument must eb a name"));
+        return err!(ValueError, format!("first argument must be a name"));
     }
 }
 

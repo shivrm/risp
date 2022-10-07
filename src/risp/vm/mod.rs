@@ -1,6 +1,4 @@
 mod interpreter;
-pub mod macros;
-pub mod rispstd;
 mod types;
 
 use std::fmt;

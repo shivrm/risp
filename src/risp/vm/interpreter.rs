@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use super::{macros, rispstd, ErrorKind, RuntimeError, Value};
-use crate::risp::{shared::Op, AstNode};
+use super::{ErrorKind, RuntimeError, Value};
+use crate::risp::{shared::Op, AstNode, stdlib};
 
 macro_rules! err {
     ($kind:ident, $msg:expr) => {
@@ -22,8 +22,8 @@ impl Interpreter {
     pub fn new() -> Self {
         let default_frame: HashMap<String, Value> = {
             let mut h = HashMap::new();
-            h.extend(rispstd::SYMBOLS.clone().into_iter());
-            h.extend(macros::SYMBOLS.clone().into_iter());
+            h.extend(stdlib::functions::SYMBOLS.clone().into_iter());
+            h.extend(stdlib::macros::SYMBOLS.clone().into_iter());
             h.insert("true".into(), Value::Bool(true));
             h.insert("false".into(), Value::Bool(false));
             h

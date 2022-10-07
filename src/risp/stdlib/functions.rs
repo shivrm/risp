@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::{io, io::prelude::*};
 
-use super::{RuntimeError, Value};
+use crate::risp::{RuntimeError, Value};
 
 /// Prints values to STDOUT, without a trailing newline
 pub fn print(_in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
@@ -9,7 +9,7 @@ pub fn print(_in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
 
     match iter.next() {
         Some(v) => print!("{}", v.display()),
-        None => (()),
+        None => (),
     }
 
     for el in iter {

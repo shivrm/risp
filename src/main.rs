@@ -1,4 +1,16 @@
-#![allow(unused_parens)]
+//! # RISP
+//! 
+//! RISP is an interpreted language with a LISP-like syntax.
+//! 
+//! :warning: RISP is a work-in-progress and is likely to
+//! change without prior notice.
+//! 
+//! # Quick Example
+//! ```risp
+//! (set name (input "Enter your name: "))
+//! (println "Hello," name)
+//! (println "1 + 1 is" (+ 1 1))
+//! ```
 
 use std::{env, fs};
 use std::{io, io::prelude::*};
