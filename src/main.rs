@@ -1,8 +1,10 @@
+#![allow(unused_parens)]
+
 use std::{env, fs};
 use std::{io, io::prelude::*};
 
 mod risp;
-use risp::{AstNode, Type, WrappedType};
+use risp::{AstNode, Value};
 
 mod lexspeed;
 
@@ -15,7 +17,7 @@ fn interpret_exprs(interpreter: &mut risp::Interpreter, asts: Vec<AstNode>, outp
         let value = interpreter.eval(&ast);
 
         match value {
-            Ok(WrappedType::Null) => (),
+            Ok(Value::Null) => (),
             Ok(v) if output => println!("{}", v.repr()),
             Err(err) => eprintln!("{err:?}"),
             _ => (),

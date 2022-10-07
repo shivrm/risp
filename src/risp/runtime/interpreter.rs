@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{macros, rispstd, ErrorKind, RuntimeError, Type, WrappedType};
+use super::{macros, rispstd, ErrorKind, RuntimeError, Value};
 use crate::risp::{shared::Op, AstNode};
 
 macro_rules! err {
@@ -12,24 +12,20 @@ macro_rules! err {
     };
 }
 
-// Operator functions have this type signature
-type CmpOpFn = fn(&WrappedType, &WrappedType) -> Option<WrappedType>;
-type BinOpFn = fn(&WrappedType, &WrappedType) -> Option<bool>;
-
 /// Interprets ASTs
 pub struct Interpreter {
-    frame: HashMap<String, WrappedType>,
+    frame: HashMap<String, Value>,
 }
 
 impl Interpreter {
     /// Creates a new interpreter.
     pub fn new() -> Self {
-        let default_frame: HashMap<String, WrappedType> = {
+        let default_frame: HashMap<String, Value> = {
             let mut h = HashMap::new();
             h.extend(rispstd::SYMBOLS.clone().into_iter());
             h.extend(macros::SYMBOLS.clone().into_iter());
-            h.insert("true".into(), WrappedType::Bool(true));
-            h.insert("false".into(), WrappedType::Bool(false));
+            h.insert("true".into(), Value::Bool(true));
+            h.insert("false".into(), Value::Bool(false));
             h
         };
 
@@ -40,14 +36,14 @@ impl Interpreter {
 
     /// Gets the value associated with a name from the interpreter's 'symbol table'
     /// Currently, this just gets them from the SYMBOLS HashMap in the standard library.
-    pub fn get_name(&self, name: &str) -> Result<WrappedType, RuntimeError> {
+    pub fn get_name(&self, name: &str) -> Result<Value, RuntimeError> {
         match self.frame.get(name) {
             Some(value) => Ok(value.clone()),
             None => err!(NameError, format!("{name} is not defined")),
         }
     }
 
-    pub fn set_name(&mut self, name: &str, value: WrappedType) {
+    pub fn set_name(&mut self, name: &str, value: Value) {
         self.frame.insert(name.into(), value);
     }
 
@@ -55,18 +51,18 @@ impl Interpreter {
     /// and return a `Vec<Type>`.
     pub fn call_rustfn(
         &self,
-        func: fn(Vec<WrappedType>) -> Result<Vec<WrappedType>, RuntimeError>,
-        params: Vec<WrappedType>,
-    ) -> Result<WrappedType, RuntimeError> {
+        func: fn(Vec<Value>) -> Result<Vec<Value>, RuntimeError>,
+        params: Vec<Value>,
+    ) -> Result<Value, RuntimeError> {
         let result = func(params)?;
 
         // Returns Null if the function returns an empty Vec.
         // If the Vec contains one value, returns the value
         // If the Vec contains more than one value, returns it as a list
         let result = match result.len() {
-            0 => WrappedType::Null,
+            0 => Value::Null,
             1 => result[0].clone(),
-            _ => WrappedType::List(result),
+            _ => Value::List(result),
         };
 
         Ok(result)
@@ -79,19 +75,12 @@ impl Interpreter {
     pub fn call_operator(
         &self,
         op: Op,
-        operands: Vec<WrappedType>,
-    ) -> Result<WrappedType, RuntimeError> {
-        // a + b can be evaluated as `a.add(b)` or as `b.radd(a)`. This is useful when
-        // a does not directly implement `add` for b.
-        // The interpreter always tries to use the primary fn first. If this is not implemented,
-        // then it uses the alternate fn.
-        let (primary_fn, alternate_fn) = match op {
-            Op::Plus => (Type::add as CmpOpFn, Type::radd as CmpOpFn),
-            Op::Minus => (Type::sub as CmpOpFn, Type::rsub as CmpOpFn),
-            Op::Star => (Type::mul as CmpOpFn, Type::rmul as CmpOpFn),
-            Op::Slash => (Type::div as CmpOpFn, Type::rdiv as CmpOpFn),
-            _ => return self.call_boolean_op(op, operands),
-        };
+        operands: Vec<Value>,
+    ) -> Result<Value, RuntimeError> {
+
+        if let Op::Equal | Op::Greater | Op::Less = op {
+            return self.call_boolean_op(op, operands)
+        }
 
         let mut params = operands.iter();
 
@@ -102,25 +91,7 @@ impl Interpreter {
         };
 
         for right in params {
-            // Tries to use the primary function
-            left = match primary_fn(&left, &right) {
-                Some(v) => v,
-                // Use secondary function only if primary function fails
-                None => match alternate_fn(right, &left) {
-                    Some(v) => v,
-
-                    // If both fail, return an error
-                    None => {
-                        let error_msg = format!(
-                            "invalid operand types for {}: {} and {}",
-                            op.display(),
-                            left.type_name(),
-                            right.type_name()
-                        );
-                        return err!(TypeError, error_msg);
-                    }
-                },
-            };
+            left = left.binary_op(right, &op)?;
         }
 
         Ok(left)
@@ -129,53 +100,30 @@ impl Interpreter {
     pub fn call_boolean_op(
         &self,
         op: Op,
-        operands: Vec<WrappedType>,
-    ) -> Result<WrappedType, RuntimeError> {
-        let (primary_fn, alternate_fn) = match op {
-            Op::Equal => (Type::eq as BinOpFn, Type::eq as BinOpFn),
-            Op::Greater => (Type::gt as BinOpFn, Type::lt as BinOpFn),
-            Op::Less => (Type::lt as BinOpFn, Type::gt as BinOpFn),
-            _ => unreachable!(),
-        };
-
+        operands: Vec<Value>,
+    ) -> Result<Value, RuntimeError> {
         let mut res = true;
 
         for window in operands.windows(2) {
             let left = &window[0];
             let right = &window[1];
 
-            res = match primary_fn(&left, &right) {
-                Some(v) => v,
-                // Use secondary function only if primary function fails
-                None => match alternate_fn(&right, &left) {
-                    Some(v) => v,
-
-                    // If both fail, return an error
-                    None => {
-                        let error_msg = format!(
-                            "invalid operand types for {}: {} and {}",
-                            op.display(),
-                            left.type_name(),
-                            right.type_name()
-                        );
-                        return err!(TypeError, error_msg);
-                    }
-                },
-            };
+            if let Value::Bool(b) = left.binary_op(right, &op)? {
+                res = res && b;
+            }
         }
-
-        Ok(res.into())
+        Ok(Value::Bool(res))
     }
     /// Evaluates an AST node
-    pub fn eval(&mut self, node: &AstNode) -> Result<WrappedType, RuntimeError> {
+    pub fn eval(&mut self, node: &AstNode) -> Result<Value, RuntimeError> {
         match node {
             AstNode::Name(name) => self.get_name(&name),
 
             // These just involve transposing the value from an AstNode to a Type
-            AstNode::Int(num) => Ok(WrappedType::Int(*num)),
-            AstNode::Float(f) => Ok(WrappedType::Float(*f)),
-            AstNode::Str(s) => Ok(WrappedType::Str(s.clone())),
-            AstNode::Operator(op) => Ok(WrappedType::Operator(*op)),
+            AstNode::Int(num) => Ok(Value::Int(*num)),
+            AstNode::Float(f) => Ok(Value::Float(*f)),
+            AstNode::Str(s) => Ok(Value::Str(s.clone())),
+            AstNode::Operator(op) => Ok(Value::Operator(*op)),
 
             AstNode::Expr(nodes) => {
                 if nodes.is_empty() {
@@ -186,7 +134,7 @@ impl Interpreter {
                 let func = &nodes[0];
                 let func = self.eval(func)?;
 
-                if let WrappedType::RustMacro(mac) = func {
+                if let Value::RustMacro(mac) = func {
                     return Ok(mac(self, &nodes[1..])?);
                 }
 
@@ -198,9 +146,9 @@ impl Interpreter {
 
                 // Make sure the function is a callable
                 match func {
-                    WrappedType::RustFn(f) => self.call_rustfn(f, params),
+                    Value::RustFn(f) => self.call_rustfn(f, params),
 
-                    WrappedType::Operator(op) => self.call_operator(op, params),
+                    Value::Operator(op) => self.call_operator(op, params),
 
                     _ => err!(TypeError, format!("{} is not callable", func.type_name())),
                 }

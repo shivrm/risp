@@ -6,7 +6,7 @@ mod types;
 use std::fmt;
 
 pub use interpreter::Interpreter;
-pub use types::{Type, WrappedType};
+pub use types::Value;
 
 #[derive(Debug)]
 pub enum ErrorKind {

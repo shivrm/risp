@@ -1,11 +1,11 @@
-use super::{Type, WrappedType};
+use super::{Type, Value};
 use crate::risp::runtime::{Interpreter, RuntimeError};
 use crate::risp::{shared::Op, AstNode};
 
 pub type Str = String;
-pub type List = Vec<WrappedType>;
+pub type List = Vec<Value>;
 pub type RustFn = fn(List) -> Result<List, RuntimeError>;
-pub type RustMacro = fn(&mut Interpreter, &[AstNode]) -> Result<WrappedType, RuntimeError>;
+pub type RustMacro = fn(&mut Interpreter, &[AstNode]) -> Result<Value, RuntimeError>;
 pub struct Null;
 
 impl Type for Str {
@@ -17,33 +17,33 @@ impl Type for Str {
         format!("{self:?}")
     }
 
-    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
+    fn add(&self, other: &Value) -> Option<Value> {
         let res = match other {
-            WrappedType::Str(s) => (self.clone() + &s).into(),
+            Value::Str(s) => (self.clone() + &s).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
+    fn mul(&self, other: &Value) -> Option<Value> {
         let res = match other {
-            WrappedType::Int(n) => self.repeat(*n as usize).into(),
+            Value::Int(n) => self.repeat(*n as usize).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
+    fn rmul(&self, other: &Value) -> Option<Value> {
         let res = match other {
-            WrappedType::Int(n) => self.repeat(*n as usize).into(),
+            Value::Int(n) => self.repeat(*n as usize).into(),
             _ => return None,
         };
         Some(res)
     }
 
-    fn eq(&self, other: &WrappedType) -> Option<bool> {
+    fn eq(&self, other: &Value) -> Option<bool> {
         let res = match other {
-            WrappedType::Str(s) => (self == s),
+            Value::Str(s) => (self == s),
             _ => return None,
         };
         Some(res)
@@ -88,9 +88,9 @@ impl Type for List {
         result
     }
 
-    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
+    fn add(&self, other: &Value) -> Option<Value> {
         let res = match other {
-            WrappedType::List(el) => self
+            Value::List(el) => self
                 .iter()
                 .cloned()
                 .chain(el.iter().cloned())
@@ -101,9 +101,9 @@ impl Type for List {
         Some(res)
     }
 
-    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
+    fn mul(&self, other: &Value) -> Option<Value> {
         let res = match other {
-            WrappedType::Int(n) => self
+            Value::Int(n) => self
                 .iter()
                 .cloned()
                 .cycle()
@@ -115,9 +115,9 @@ impl Type for List {
         Some(res)
     }
 
-    fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
+    fn rmul(&self, other: &Value) -> Option<Value> {
         let res = match other {
-            WrappedType::Int(n) => self
+            Value::Int(n) => self
                 .iter()
                 .cloned()
                 .cycle()
@@ -129,9 +129,9 @@ impl Type for List {
         Some(res)
     }
 
-    fn eq(&self, other: &WrappedType) -> Option<bool> {
+    fn eq(&self, other: &Value) -> Option<bool> {
         match other {
-            WrappedType::List(l) => Some(
+            Value::List(l) => Some(
                 (self.len() == l.len())
                     && self.iter().zip(l).all(|(a, b)| a.eq(b).unwrap_or(false)),
             ),

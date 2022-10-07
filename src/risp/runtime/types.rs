@@ -1,161 +1,107 @@
-use crate::risp::Op;
-
-mod misc;
-mod num;
-
-pub use misc::*;
-pub use num::*;
-
-macro_rules! derive_from {
-    ($($kind:ident),*) => {
-        $(
-        impl From<$kind> for WrappedType {
-            fn from(item: $kind) -> Self {
-                WrappedType::$kind(item)
-            }
-        }
-        )*
-    };
-}
-
-pub trait Type {
-    fn repr(&self) -> String;
-    fn display(&self) -> String;
-
-    fn add(&self, _other: &WrappedType) -> Option<WrappedType> {
-        None
-    }
-    fn sub(&self, _other: &WrappedType) -> Option<WrappedType> {
-        None
-    }
-    fn mul(&self, _other: &WrappedType) -> Option<WrappedType> {
-        None
-    }
-    fn div(&self, _other: &WrappedType) -> Option<WrappedType> {
-        None
-    }
-    fn radd(&self, _other: &WrappedType) -> Option<WrappedType> {
-        None
-    }
-    fn rsub(&self, _other: &WrappedType) -> Option<WrappedType> {
-        None
-    }
-    fn rmul(&self, _other: &WrappedType) -> Option<WrappedType> {
-        None
-    }
-    fn rdiv(&self, _other: &WrappedType) -> Option<WrappedType> {
-        None
-    }
-    fn eq(&self, _other: &WrappedType) -> Option<bool> {
-        None
-    }
-    fn gt(&self, _other: &WrappedType) -> Option<bool> {
-        None
-    }
-    fn lt(&self, _other: &WrappedType) -> Option<bool> {
-        None
-    }
-}
+use crate::{AstNode, risp::{Op, ErrorKind}};
+use super::{Interpreter, RuntimeError};
 
 #[derive(Clone)]
-pub enum WrappedType {
-    Int(Int),
-    Bool(Bool),
-    Float(Float),
-    Str(Str),
-    List(List),
-    RustFn(RustFn),
-    RustMacro(RustMacro),
+pub enum Value {
+    Int(i32),
+    Bool(bool),
+    Float(f64),
+    Str(String),
+    List(Vec<Value>),
+    RustFn(fn (Vec<Value>) -> Result<Vec<Value>, RuntimeError>),
+    RustMacro(fn (&mut Interpreter, &[AstNode]) -> Result<Value, RuntimeError>),
     Operator(Op),
     Null,
 }
 
-impl WrappedType {
-    fn unwrap(&self) -> Box<&dyn Type> {
-        use WrappedType::*;
-        match self {
-            Int(i) => Box::new(i),
-            Bool(b) => Box::new(b),
-            Float(f) => Box::new(f),
-            Str(s) => Box::new(s),
-            List(l) => Box::new(l),
-            RustFn(f) => Box::new(f),
-            RustMacro(m) => Box::new(m),
-            Operator(op) => Box::new(op),
-            Null => Box::new(&misc::Null),
-        }
-    }
+use Value::*;
 
+impl Value {
     pub fn type_name(&self) -> String {
-        use WrappedType::*;
         match self {
-            Int(_) => "int",
-            Bool(_) => "bool",
-            Float(_) => "float",
-            Str(_) => "str",
-            List(_) => "list",
-            RustFn(_) => "rustfn",
-            RustMacro(_) => "rustmacro",
-            Operator(_) => "operator",
-            Null => "null",
+            Int(_) => "int".into(),
+            Bool(_) => "bool".into(),
+            Float(_) => "float".into(),
+            Str(_) => "str".into(),
+            List(_) => "list".into(),
+            RustFn(_) => "rustfn".into(),
+            RustMacro(_) => "rustmacro".into(),
+            Operator(_) => "operator".into(),
+            Null => "null".into()
         }
-        .into()
-    }
-}
-
-derive_from!(Int, Bool, Float, Str, List, RustFn, RustMacro);
-
-// Function definitions could be done by a macro 🤔
-impl Type for WrappedType {
-    fn repr(&self) -> String {
-        self.unwrap().repr()
     }
 
-    fn display(&self) -> String {
-        self.unwrap().repr()
+    pub fn repr(&self) -> String {
+        match self {
+            Int(a) => a.to_string(),
+            Bool(a) => a.to_string(),
+            Float(a) => a.to_string(),
+            Str(a) => a.to_string(),
+            List(_) => "[]".into(),
+            RustFn(_) => "<Rust Function>".into(),
+            RustMacro(_) => "<Rust Macro>".into(),
+            Operator(a) => match a {
+                Op::Plus => "+".into(),
+                Op::Minus => "-".into(),
+                Op::Star => "*".into(),
+                Op::Slash => "/".into(),
+                Op::Equal => "=".into(),
+                Op::Greater => ">".into(),
+                Op::Less => "<".into()
+            },
+            Null => "null".into()
+        }
     }
 
-    fn add(&self, other: &WrappedType) -> Option<WrappedType> {
-        self.unwrap().add(other)
+    pub fn display(&self) -> String {
+        self.repr()
     }
 
-    fn sub(&self, other: &WrappedType) -> Option<WrappedType> {
-        self.unwrap().sub(other)
+    pub fn oneside_binary_op(&self, rhs: &Value, op: &Op) -> Result<Value, RuntimeError> {
+        macro_rules! impl_default {
+            ($a:expr, $b:expr, $out:ident) => {{
+                use Op::*;
+                let value = match op {
+                    Plus => $out($a + $b),
+                    Minus => $out($a - $b),
+                    Star => $out($a * $b),
+                    Slash => $out($a / $b),
+                    Equal => Bool($a == $b),
+                    Greater => Bool($a > $b),
+                    Less => Bool($a < $b),
+                };
+                return Ok(value)
+            }}
+        }
+        
+        match (self, rhs) {
+            (Int(a), Int(b)) => impl_default!(a, b, Int),
+            (Bool(a), Int(b)) => impl_default!(&(*a as i32), b, Int),
+            (Float(a), Int(b)) => impl_default!(a, &(*b as f64), Float),
+            (Str(a), Str(b)) => {
+                if op == &Op::Plus {
+                    return Ok(Str(a.clone() + b))
+                }
+            }
+            (Str(a), Int(b)) => {
+                if op == &Op::Star {
+                    return Ok(Str(a.repeat(*b as usize)))
+                }
+            },
+            _ => (),
+        }
+
+        return Err(RuntimeError {
+            kind: ErrorKind::TypeError,
+            msg: "".into()
+        })
+        
     }
 
-    fn mul(&self, other: &WrappedType) -> Option<WrappedType> {
-        self.unwrap().mul(other)
-    }
-
-    fn div(&self, other: &WrappedType) -> Option<WrappedType> {
-        self.unwrap().div(other)
-    }
-
-    fn radd(&self, other: &WrappedType) -> Option<WrappedType> {
-        self.unwrap().radd(other)
-    }
-
-    fn rsub(&self, other: &WrappedType) -> Option<WrappedType> {
-        self.unwrap().rsub(other)
-    }
-
-    fn rmul(&self, other: &WrappedType) -> Option<WrappedType> {
-        self.unwrap().rmul(other)
-    }
-
-    fn rdiv(&self, other: &WrappedType) -> Option<WrappedType> {
-        self.unwrap().rdiv(other)
-    }
-
-    fn eq(&self, other: &WrappedType) -> Option<bool> {
-        self.unwrap().eq(other)
-    }
-
-    fn gt(&self, other: &WrappedType) -> Option<bool> {
-        self.unwrap().gt(other)
-    }
-
-    fn lt(&self, other: &WrappedType) -> Option<bool> {
-        self.unwrap().lt(other)
+    pub fn binary_op(&self, rhs: &Value, op: &Op) -> Result<Value, RuntimeError> {
+        return match self.oneside_binary_op(rhs, op) {
+            Err(_) => rhs.oneside_binary_op(self, op),
+            ok => ok
+        }
     }
 }
