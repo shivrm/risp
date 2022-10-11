@@ -11,6 +11,7 @@ pub enum Value {
     RustFn(fn (Vec<Value>) -> Result<Vec<Value>, RuntimeError>),
     RustMacro(fn (&mut Interpreter, &[AstNode]) -> Result<Value, RuntimeError>),
     Operator(Op),
+    Symbol(String),
     Null,
 }
 
@@ -27,6 +28,7 @@ impl Value {
             RustFn(_) => "rustfn".into(),
             RustMacro(_) => "rustmacro".into(),
             Operator(_) => "operator".into(),
+            Symbol(_) => "symbol".into(),
             Null => "null".into()
         }
     }
@@ -49,6 +51,7 @@ impl Value {
                 Op::Greater => ">".into(),
                 Op::Less => "<".into()
             },
+            Symbol(s) => format!("<Symbol {s}>"),
             Null => "null".into()
         }
     }

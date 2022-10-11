@@ -20,10 +20,15 @@ pub use token::{Token, TokenKind};
 pub enum AstNode {
     Int(i32),
     Float(f64),
+
     Name(String),
+    Symbol(String),
+
     Str(String),
     Operator(super::shared::Op),
+
     Expr(Vec<AstNode>),
+    List(Vec<AstNode>),
 }
 
 pub struct SyntaxError(pub String);

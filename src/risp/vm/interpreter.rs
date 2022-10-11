@@ -136,6 +136,7 @@ impl Interpreter {
             // Names are evaluated by getting the value associated
             // with them.
             AstNode::Name(name) => self.get_name(&name),
+            AstNode::Symbol(s) => Ok(Value::Symbol(s.clone())),
 
             // Int, Float, Str, and Operator just involve transposing the
             // inner content into a Value
@@ -143,6 +144,16 @@ impl Interpreter {
             AstNode::Float(f) => Ok(Value::Float(*f)),
             AstNode::Str(s) => Ok(Value::Str(s.clone())),
             AstNode::Operator(op) => Ok(Value::Operator(*op)),
+
+            AstNode::List(l) => {
+                let mut elems = Vec::new();
+                
+                for el in l {
+                   elems.push(self.eval(el)?)
+                }
+
+                return Ok(Value::List(elems))
+            },
 
             // In expressions, the first item is the function to execute
             // And the rest of the items are the arguments

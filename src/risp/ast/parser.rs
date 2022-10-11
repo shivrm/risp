@@ -85,6 +85,16 @@ impl<'a> Parser<'a> {
             // Parses an identifier.
             TokenKind::Name => AstNode::Name(content.into()),
 
+            // Parses a quote
+            TokenKind::Quote => match self.parse_expr()? {
+                AstNode::Expr(e) => AstNode::List(e),
+                AstNode::Name(e) => AstNode::Symbol(e),
+                t => {
+                    let error_msg = format!("{t:?} can not be quoted");
+                    return Err(SyntaxError(error_msg))
+                }
+            },
+
             // No other tokens are valid atoms.
             t => {
                 let error_msg = format!("unexpected {t:?} while parsing atom");

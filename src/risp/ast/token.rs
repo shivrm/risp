@@ -35,6 +35,8 @@ pub enum TokenKind {
     OpenParen,
     /// A closing parenthesis
     CloseParen,
+    /// A quote
+    Quote,
     /// An operator
     Operator,
     /// Represents the end of the source string

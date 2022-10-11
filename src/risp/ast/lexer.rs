@@ -147,7 +147,6 @@ impl<'a> Lexer<'a> {
 
             // Matches string literals, which start with a double quote
             // NOTE: The string token does not include the quotes.
-            // TODO: Add single quote support
             // TODO: Add support for escape sequences.
             '"' => {
                 self.adv();
@@ -167,6 +166,7 @@ impl<'a> Lexer<'a> {
                     '(' => Kind::OpenParen,
                     ')' => Kind::CloseParen,
                     '*' | '/' | '>' | '<' | '=' => Kind::Operator,
+                    '\'' => Kind::Quote,
                     _ => {
                         let error_msg = format!("did not expect character {c:?}");
                         return Err(SyntaxError(error_msg));
