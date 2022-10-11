@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::{io, io::prelude::*};
 
-use crate::risp::{RuntimeError, Value};
+use crate::risp::{RuntimeError, Value, Interpreter};
 
 /// Prints values to STDOUT, without a trailing newline
-pub fn print(_in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
+pub fn print(_: &mut Interpreter, _in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
     let mut iter = _in.iter();
 
     match iter.next() {
@@ -22,15 +22,15 @@ pub fn print(_in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
 }
 
 /// Prints values to STDOUT, followed by a newline
-pub fn println(_in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
-    print(_in)?;
+pub fn println(inter: &mut Interpreter, _in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
+    print(inter, _in)?;
     print!("\n");
 
     Ok(Vec::new())
 }
 
-pub fn input(_in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
-    print(_in)?;
+pub fn input(inter: &mut Interpreter, _in: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
+    print(inter, _in)?;
 
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).unwrap();

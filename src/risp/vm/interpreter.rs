@@ -15,14 +15,14 @@ macro_rules! err {
 
 /// A struct that interprets ASTs
 pub struct Interpreter {
-    frame: HashMap<String, Value>,
+    symbols: HashMap<String, Value>,
 }
 
 impl Interpreter {
     /// Creates a new interpreter.
     pub fn new() -> Self {
         // Create the interpreter's symbol table
-        let default_frame: HashMap<String, Value> = {
+        let symbols: HashMap<String, Value> = {
             let mut h = HashMap::new();
             h.extend(stdlib::functions::SYMBOLS.clone().into_iter());
             h.extend(stdlib::macros::SYMBOLS.clone().into_iter());
@@ -32,7 +32,7 @@ impl Interpreter {
         };
 
         Self {
-            frame: default_frame,
+            symbols,
         }
     }
 
@@ -40,7 +40,7 @@ impl Interpreter {
     /// symbol table. Returns a [`RuntimeError`] if the name is not present
     /// in the symbol table.
     pub fn get_name(&self, name: &str) -> Result<Value, RuntimeError> {
-        match self.frame.get(name) {
+        match self.symbols.get(name) {
             Some(value) => Ok(value.clone()),
             None => err!(NameError, format!("{name} is not defined")),
         }
@@ -50,19 +50,19 @@ impl Interpreter {
     /// a name with a value. If an entry with the same name already
     /// exists, then its value is updated.
     pub fn set_name(&mut self, name: &str, value: Value) {
-        self.frame.insert(name.into(), value);
+        self.symbols.insert(name.into(), value);
     }
 
     /// Calls a native Rust function
     pub fn call_rustfn(
-        &self,
-        func: fn(Vec<Value>) -> Result<Vec<Value>, RuntimeError>,
+        &mut self,
+        func: fn(&mut Interpreter, Vec<Value>) -> Result<Vec<Value>, RuntimeError>,
         params: Vec<Value>,
     ) -> Result<Value, RuntimeError> {
-        let result = func(params)?;
+        let result = func(self, params)?;
 
         // Returns Null if the function returns an empty Vec.
-        // If the Vec contains one value, returns the value
+        // If the Vec ccontains one value, returns the value
         // If the Vec contains more than one value, returns it as a list
         let result = match result.len() {
             0 => Value::Null,
@@ -112,7 +112,7 @@ impl Interpreter {
     /// Boolean operators have different chaining rules compared to
     /// binary operators. `(< 1 2 3)` would be interpreted as
     /// `(1 < 2) and (2 < 3)`.
-    pub fn call_boolean_op(
+    fn call_boolean_op(
         &self,
         op: Op,
         operands: Vec<Value>,

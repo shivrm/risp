@@ -8,7 +8,7 @@ pub enum Value {
     Float(f64),
     Str(String),
     List(Vec<Value>),
-    RustFn(fn (Vec<Value>) -> Result<Vec<Value>, RuntimeError>),
+    RustFn(fn (&mut Interpreter, Vec<Value>) -> Result<Vec<Value>, RuntimeError>),
     RustMacro(fn (&mut Interpreter, &[AstNode]) -> Result<Value, RuntimeError>),
     Operator(Op),
     Symbol(String),
