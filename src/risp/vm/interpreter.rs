@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use super::{ErrorKind, RuntimeError, Value};
 use crate::risp::{shared::Op, AstNode, stdlib};
 
+/// Used for conveniently creating [`RuntimeError`]s
 macro_rules! err {
     ($kind:ident, $msg:expr) => {
         Err(RuntimeError {
@@ -12,7 +13,7 @@ macro_rules! err {
     };
 }
 
-/// Interprets ASTs
+/// A struct that interprets ASTs
 pub struct Interpreter {
     frame: HashMap<String, Value>,
 }
@@ -20,6 +21,7 @@ pub struct Interpreter {
 impl Interpreter {
     /// Creates a new interpreter.
     pub fn new() -> Self {
+        // Create the interpreter's symbol table
         let default_frame: HashMap<String, Value> = {
             let mut h = HashMap::new();
             h.extend(stdlib::functions::SYMBOLS.clone().into_iter());
@@ -34,8 +36,9 @@ impl Interpreter {
         }
     }
 
-    /// Gets the value associated with a name from the interpreter's 'symbol table'
-    /// Currently, this just gets them from the SYMBOLS HashMap in the standard library.
+    /// Retrieves the [`Value`] associated with a name in the interpreter's
+    /// symbol table. Returns a [`RuntimeError`] if the name is not present
+    /// in the symbol table.
     pub fn get_name(&self, name: &str) -> Result<Value, RuntimeError> {
         match self.frame.get(name) {
             Some(value) => Ok(value.clone()),
@@ -43,12 +46,14 @@ impl Interpreter {
         }
     }
 
+    /// Creates an entry in the interpreter's symbol table associating
+    /// a name with a value. If an entry with the same name already
+    /// exists, then its value is updated.
     pub fn set_name(&mut self, name: &str, value: Value) {
         self.frame.insert(name.into(), value);
     }
 
-    /// Calls a function that's implemented in Rust. The function must accept a `Vec<Type>` as an argument
-    /// and return a `Vec<Type>`.
+    /// Calls a native Rust function
     pub fn call_rustfn(
         &self,
         func: fn(Vec<Value>) -> Result<Vec<Value>, RuntimeError>,
@@ -68,16 +73,21 @@ impl Interpreter {
         Ok(result)
     }
 
-    /// Calls an operator `op` on a Vec containing operands.
-    ///
-    /// This operator is evaluated similar to a `.reduce()`.
-    /// i.e., `(+ a b c d)` will be evaluated as `((a + b) + c) + d`
+    /// This method evaluates binary operators in a manner similar to
+    /// `.reduce()`.
+    /// 
+    /// For example, `(+ 1 2 3 4)` is evaluated as `(+ (+ (+ 1 2) 3) 4)`
+    /// which is `((1 + 2) + 3) + 4` in infix notation.
+    /// 
+    /// Handling of boolean operators is delegated to the `call_boolean_op`
+    /// method.
     pub fn call_operator(
         &self,
         op: Op,
         operands: Vec<Value>,
     ) -> Result<Value, RuntimeError> {
 
+        // Boolean operators need different chaining logic
         if let Op::Equal | Op::Greater | Op::Less = op {
             return self.call_boolean_op(op, operands)
         }
@@ -97,6 +107,11 @@ impl Interpreter {
         Ok(left)
     }
 
+    /// Evaluates boolean operators.
+    /// 
+    /// Boolean operators have different chaining rules compared to
+    /// binary operators. `(< 1 2 3)` would be interpreted as
+    /// `(1 < 2) and (2 < 3)`.
     pub fn call_boolean_op(
         &self,
         op: Op,
@@ -114,42 +129,48 @@ impl Interpreter {
         }
         Ok(Value::Bool(res))
     }
+    
     /// Evaluates an AST node
     pub fn eval(&mut self, node: &AstNode) -> Result<Value, RuntimeError> {
         match node {
+            // Names are evaluated by getting the value associated
+            // with them.
             AstNode::Name(name) => self.get_name(&name),
 
-            // These just involve transposing the value from an AstNode to a Type
+            // Int, Float, Str, and Operator just involve transposing the
+            // inner content into a Value
             AstNode::Int(num) => Ok(Value::Int(*num)),
             AstNode::Float(f) => Ok(Value::Float(*f)),
             AstNode::Str(s) => Ok(Value::Str(s.clone())),
             AstNode::Operator(op) => Ok(Value::Operator(*op)),
 
+            // In expressions, the first item is the function to execute
+            // And the rest of the items are the arguments
             AstNode::Expr(nodes) => {
                 if nodes.is_empty() {
                     return err!(ValueError, "expression is empty");
                 };
 
-                // Expr has function as first argument and rest are parameters
+                // Moves the function into a seperate variable
                 let func = &nodes[0];
                 let func = self.eval(func)?;
 
+                // Macros operate on AST nodes themselves, so they
+                // can be called immedicately
                 if let Value::RustMacro(mac) = func {
-                    return Ok(mac(self, &nodes[1..])?);
+                    return mac(self, &nodes[1..]);
                 }
 
-                // Evaluate each parameter
-                let mut params = Vec::new();
+                // Evaluate each argument
+                let mut args = Vec::new();
                 for node in &nodes[1..] {
-                    params.push(self.eval(node)?);
+                    args.push(self.eval(node)?);
                 }
 
                 // Make sure the function is a callable
                 match func {
-                    Value::RustFn(f) => self.call_rustfn(f, params),
-
-                    Value::Operator(op) => self.call_operator(op, params),
-
+                    Value::RustFn(f) => self.call_rustfn(f, args),
+                    Value::Operator(op) => self.call_operator(op, args),
                     _ => err!(TypeError, format!("{} is not callable", func.type_name())),
                 }
             }

@@ -1,4 +1,4 @@
-//! This module parser RISP source code into abstract syntax trees
+//! This module parses RISP source code into abstract syntax trees
 //! (or ASTs). The [`Lexer`] is used to split the source code into
 //! [`Token`]s and the [`Parser`] processes these tokens into an
 //! [`AstNode`]. 
