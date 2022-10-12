@@ -3,8 +3,8 @@ use super::{Interpreter, RuntimeError};
 
 #[derive(Clone)]
 pub struct RispFn {
-    params: Vec<String>,
-    body: AstNode
+    pub params: Vec<String>,
+    pub body: AstNode
 }
 
 impl RispFn {

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{ErrorKind, RuntimeError, Value};
+use super::{ErrorKind, RuntimeError, Value, RispFn};
 use crate::risp::{shared::Op, AstNode, stdlib};
 
 /// Used for conveniently creating [`RuntimeError`]s
@@ -130,6 +130,22 @@ impl Interpreter {
         Ok(Value::Bool(res))
     }
     
+    pub fn call_rispfn(&mut self, rispfn: RispFn, args: Vec<Value>) -> Result<Value, RuntimeError> {
+        let old_symbols = self.symbols.clone();
+
+        self.symbols = self.symbols.clone();
+        
+        for (param, value) in rispfn.params.iter().zip(args) {
+            self.set_name(param, value);
+        }
+
+        let return_value = self.eval(&rispfn.body);
+
+        self.symbols = old_symbols;
+
+        return return_value
+    }
+
     /// Evaluates an AST node
     pub fn eval(&mut self, node: &AstNode) -> Result<Value, RuntimeError> {
         match node {
@@ -181,6 +197,7 @@ impl Interpreter {
                 // Make sure the function is a callable
                 match func {
                     Value::RustFn(f) => self.call_rustfn(f, args),
+                    Value::RispFn(f) => self.call_rispfn(f, args),
                     Value::Operator(op) => self.call_operator(op, args),
                     _ => err!(TypeError, format!("{} is not callable", func.type_name())),
                 }
