@@ -11,30 +11,21 @@ macro_rules! err {
     };
 }
 
-fn set(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Value, RuntimeError> {
-    if nodes.len() != 2 {
+fn set(inter: &mut Interpreter, args: Vec<Value>) -> Result<Vec<Value>, RuntimeError> {
+    if args.len() != 2 {
         return err!(
             ValueError,
-            format!("expected 2 arguments, found {}", nodes.len())
+            format!("expected 2 arguments, found {}", args.len())
         );
     }
 
-    if let AstNode::Name(name) = &nodes[0] {
-        let value = inter.eval(&nodes[1]).unwrap();
+    if let Value::Symbol(name) = &args[0] {
+        let value = args[1].clone();
         inter.set_name(&name, value.clone());
-        Ok(value)
+        Ok(vec![value])
     } else {
         return err!(ValueError, format!("first argument must be a name"));
     }
-}
-
-fn list(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Value, RuntimeError> {
-    let mut elems: Vec<Value> = Vec::new();
-    for node in nodes {
-        elems.push(inter.eval(&node)?);
-    }
-
-    Ok(Value::List(elems))
 }
 
 fn block(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Value, RuntimeError> {
@@ -87,8 +78,7 @@ fn while_loop(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Value, Runti
 lazy_static! {
     pub static ref SYMBOLS: HashMap<String, Value> = {
         let mut h = HashMap::new();
-        h.insert("set".into(), Value::RustMacro(set));
-        h.insert("list".into(), Value::RustMacro(list));
+        h.insert("set".into(), Value::RustFn(set));
         h.insert("block".into(), Value::RustMacro(block));
         h.insert("if".into(), Value::RustMacro(if_else));
         h.insert("while".into(), Value::RustMacro(while_loop));
