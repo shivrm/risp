@@ -12,7 +12,7 @@ mod types;
 use std::fmt;
 
 pub use interpreter::Interpreter;
-pub use types::Value;
+pub use types::{RispFn, Value};
 
 
 /// An enum used to discriminate between different kinds of errors.

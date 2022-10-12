@@ -1,4 +1,4 @@
-use crate::risp::vm::{ErrorKind, Interpreter, RuntimeError, Value};
+use crate::risp::vm::{ErrorKind, Interpreter, RuntimeError, RispFn, Value};
 use crate::risp::AstNode;
 use std::collections::HashMap;
 
@@ -75,6 +75,29 @@ fn while_loop(inter: &mut Interpreter, nodes: &[AstNode]) -> Result<Value, Runti
     return Ok(value);
 }
 
+fn function(_: &mut Interpreter, nodes: &[AstNode]) -> Result<Value, RuntimeError> {
+    if nodes.len() != 2 {
+        return err!(ValueError, "Not enough arguments");
+    }
+
+    let params = &nodes[0];
+    let body = &nodes[1];
+
+    if let AstNode::Expr(items) = params {
+        let mut param_names = Vec::new();
+        for param in items {
+            match param {
+                AstNode::Name(name) => param_names.push(name.clone()),
+                _ => return err!(ValueError, "Parameter must be an identifier")
+            }
+        }
+        let fn_obj = RispFn::new(param_names, body.clone());
+        return Ok(Value::RispFn(fn_obj))
+    }
+
+    return err!(ValueError, "Invalid parameters")
+}
+
 lazy_static! {
     pub static ref SYMBOLS: HashMap<String, Value> = {
         let mut h = HashMap::new();
@@ -82,6 +105,7 @@ lazy_static! {
         h.insert("block".into(), Value::RustMacro(block));
         h.insert("if".into(), Value::RustMacro(if_else));
         h.insert("while".into(), Value::RustMacro(while_loop));
+        h.insert("fn".into(), Value::RustMacro(function));
         h
     };
 }

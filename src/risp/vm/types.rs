@@ -2,6 +2,18 @@ use crate::{AstNode, risp::{Op, ErrorKind}};
 use super::{Interpreter, RuntimeError};
 
 #[derive(Clone)]
+pub struct RispFn {
+    params: Vec<String>,
+    body: AstNode
+}
+
+impl RispFn {
+    pub fn new(params: Vec<String>, body: AstNode) -> Self {
+        RispFn { params, body: body }
+    }
+}
+
+#[derive(Clone)]
 pub enum Value {
     Int(i32),
     Bool(bool),
@@ -10,6 +22,7 @@ pub enum Value {
     List(Vec<Value>),
     RustFn(fn (&mut Interpreter, Vec<Value>) -> Result<Vec<Value>, RuntimeError>),
     RustMacro(fn (&mut Interpreter, &[AstNode]) -> Result<Value, RuntimeError>),
+    RispFn(RispFn),
     Operator(Op),
     Symbol(String),
     Null,
@@ -26,6 +39,7 @@ impl Value {
             Str(_) => "str".into(),
             List(_) => "list".into(),
             RustFn(_) => "rustfn".into(),
+            RispFn(_) => "rispfn".into(),
             RustMacro(_) => "rustmacro".into(),
             Operator(_) => "operator".into(),
             Symbol(_) => "symbol".into(),
@@ -42,6 +56,7 @@ impl Value {
             List(_) => "[]".into(),
             RustFn(_) => "<Rust Function>".into(),
             RustMacro(_) => "<Rust Macro>".into(),
+            RispFn(_) => "<Risp Function>".into(),
             Operator(a) => match a {
                 Op::Plus => "+".into(),
                 Op::Minus => "-".into(),
