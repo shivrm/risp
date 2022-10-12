@@ -1,0 +1,10 @@
+(set 'favelisp (input "What's your favourite LISP? "))
+
+(if (= favelisp "RISP")
+    (println "I like RISP too :)")
+
+    (block
+        (println "That's alright :)")
+        (println "There are lots of good LISPs")
+    )
+)

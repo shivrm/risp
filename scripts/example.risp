@@ -1,24 +1,25 @@
-(println "Hello World")
+(println "Welcome to RISP!")
+(set 'name (input "What's your name? "))
+(println (+ "Hello, " name "!"))
 
-"You won't see this"
-
-(println 1 2 3 "Print multiple values" 4 5 6)
-
-(print "Print ")
-(print "Without ")
-(print "a" "newline")
-(println)
 (println)
 
-(println "1 + 2 =" (+ 1 2))
-(println "100 - 200 =" (- 100 200))
-(println "10 * 10 =" (* 10 10))
-(println "10 / 2 =" (/ 10 2))
-(println "'abc' + 'xyz' =" (+ "abc" "xyz"))
-(println "'Hello' * 3 =" (* "Hello" 3))
+(println "Let's do some arithmetic: ")
+(println "10 + 1 is" (+ 10 1))
+(println "10 - 1 is" (- 10 1))
+(println "2 * 3 * 4 is" (* 2 3 4))
+(println "1 / 2 is" (/ 1 2))
+(println "1.0 / 2.0 is" (/ 1.0 2.0))
+
 (println)
 
-(println "print and println return" (print))
-(println
-    "Hello," (input "What's your name? ")
-)
+(println "Conditional operators: ")
+(println "Is 1 > 2? " (> 1 2))
+(println "Is 1 = 2?" (= 1 2))
+(println "Is 1 < 2?" (< 1 2))
+
+(println)
+
+(println "You can also do some math with strings: ")
+(println "'Hello' + 'Goodbye' is" (+ "Hello" "Goodbye"))
+(println "'Morning' * 3 is " (* "Morning" 3))

@@ -96,9 +96,12 @@ impl Value {
             (Int(a), Int(b)) => impl_default!(a, b, Int),
             (Bool(a), Int(b)) => impl_default!(&(*a as i32), b, Int),
             (Float(a), Int(b)) => impl_default!(a, &(*b as f64), Float),
+            (Float(a), Float(b)) => impl_default!(a, b, Float),
             (Str(a), Str(b)) => {
-                if op == &Op::Plus {
-                    return Ok(Str(a.clone() + b))
+                match op {
+                    Op::Plus => return Ok(Str(a.clone() + b)),
+                    Op::Equal => return Ok(Bool(a == b)),
+                    _ => ()
                 }
             }
             (Str(a), Int(b)) => {
