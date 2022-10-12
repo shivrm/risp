@@ -2,11 +2,12 @@ use super::token::Span;
 use super::{SyntaxError, Token, TokenKind as Kind};
 use std::str::Chars;
 
-/// Splits a source string into tokens
+/// A struct that scans through a source string and splits it into
+/// [`Token`]s. 
 pub struct Lexer<'a> {
-    /// Iterator over the characters of the source
+    /// An iterator over the characters of the source string.
     chars: Chars<'a>,
-    /// Current position that the lexer uses to construct spans
+    /// The current of the lexer
     pos: usize,
 }
 
@@ -19,19 +20,21 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Returns the current lexer character, or '\0' if the lexer is at the end of the source
+    /// The character that the lexer is currently on. Returns \0
+    /// if the lexer is at the end of the source string. 
     #[inline]
     pub fn current_char(&self) -> char {
         self.chars.clone().next().unwrap_or('\0')
     }
 
-    /// Returns true if the lexer is at the end of the source
+    /// Returns `true` if the lexer has reached the end of the source
+    /// string.
     #[inline]
     pub fn eof(&self) -> bool {
         self.chars.clone().next().is_none()
     }
 
-    /// Advances the lexer to the next character
+    /// Advances the lexer to the next character.
     #[inline]
     fn adv(&mut self) {
         self.pos += match self.chars.next() {
@@ -40,10 +43,17 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Advances the lexer while a predicate is met.
-    ///
-    /// The predicate is a function which takes a `char` as an argument and returns a `bool`.
-    /// The return value determines whether the lexer should be advanced.
+    /// Continuously advances the lexer while the current character
+    /// meets a given predicate.
+    /// 
+    /// The predicate is a function which accepts a `char` as an
+    /// argument and returns a boool
+    /// 
+    /// For example, this predicate returns true if the character
+    /// is an uppercase letter:
+    /// ```rust
+    /// |c| matches!(c, 'A'..='Z')
+    /// ```
     fn take_while(&mut self, mut predicate: impl FnMut(char) -> bool) -> Span {
         let start = self.pos;
 
@@ -63,13 +73,14 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Gets the next token from the lexer. Since the lexer might throw an error,
-    /// this method returns a `Result`
+    /// Gets the next [`Token`] from the lexer. This function will
+    /// return [`Err`] if the lexer does not know how to handle a
+    /// character.
     #[inline]
     pub fn next(&mut self) -> Result<Token, SyntaxError> {
         let start = self.pos;
 
-        /// A macro that makes it easier to create a token
+        /// Used for conveniently creating tokens.
         macro_rules! tok {
             ($kind:expr) => {
                 Token {
@@ -90,12 +101,13 @@ impl<'a> Lexer<'a> {
                 tok!(Kind::EOF)
             }
 
-            // Skip character if it is whitespace
+            // Skip whitespace characters and get the next token
             c if c.is_whitespace() => {
                 self.take_while(|c| c.is_whitespace());
                 self.next()?
             }
 
+            // Match integers and floats, which start with a digit.
             '0'..='9' => {
                 self.take_while(|c| matches!(c, '0'..='9'));
 
@@ -110,16 +122,21 @@ impl<'a> Lexer<'a> {
                 }
             }
 
+            // Matches identifiers, which start with an alphabet or an underscore.
+            // Succeding characters may be an alphabet, a number, or an underscore.
             'a'..='z' | 'A'..='Z' | '_' => {
                 self.take_while(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '_' | '0'..='9'));
                 tok!(Kind::Name)
             }
 
-            // + and - are matched here because they might be the sign of a number.
+            // + and - might denote the sign of a number, so they are parsed seperately
+            // from the other operators.
             '+' | '-' => {
                 self.adv();
 
-                // When next token is a number, add this +/- to it. The sign will be parsed by the parser.
+                // If it is followed by a number, parse it and put the sign as
+                // part of the number token. This will be correcly parsed by
+                // Rust's `.parse()` methods.
                 if let Some('0'..='9') = self.chars.clone().next() {
                     let kind = self.next()?.kind;
                     tok!(kind)
@@ -128,23 +145,28 @@ impl<'a> Lexer<'a> {
                 }
             }
 
+            // Matches string literals, which start with a double quote
+            // NOTE: The string token does not include the quotes.
+            // TODO: Add support for escape sequences.
             '"' => {
                 self.adv();
 
-                // TODO: Add support for escape sequences (might need to split this into a seperate fn)
                 let span = self.take_while(|c| !matches!(c, '"'));
-                self.adv();
+                self.adv(); // Advance over the closing quote
                 tok!(Kind::String, span)
             }
 
-            // Miscellaneous single-character tokens
+            // Matches miscellaneous single-character tokens
             c => {
+                // Since character is already stored in `c`, we can advance
+                // to the next character now itself.
                 self.adv();
 
                 let kind = match c {
                     '(' => Kind::OpenParen,
                     ')' => Kind::CloseParen,
                     '*' | '/' | '>' | '<' | '=' => Kind::Operator,
+                    '\'' => Kind::Quote,
                     _ => {
                         let error_msg = format!("did not expect character {c:?}");
                         return Err(SyntaxError(error_msg));

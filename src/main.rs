@@ -1,8 +1,22 @@
+//! # RISP
+//! 
+//! RISP is an interpreted language with a LISP-like syntax.
+//! 
+//! :warning: RISP is a work-in-progress and is likely to
+//! change without prior notice.
+//! 
+//! # Quick Example
+//! ```risp
+//! (set name (input "Enter your name: "))
+//! (println "Hello," name)
+//! (println "1 + 1 is" (+ 1 1))
+//! ```
+
 use std::{env, fs};
 use std::{io, io::prelude::*};
 
 mod risp;
-use risp::{AstNode, RispType, Type};
+use risp::{AstNode, Value};
 
 mod lexspeed;
 
@@ -12,13 +26,13 @@ extern crate lazy_static;
 /// Interprets multiple expressions using the same interpreter
 fn interpret_exprs(interpreter: &mut risp::Interpreter, asts: Vec<AstNode>, output: bool) {
     for ast in asts.iter().cloned() {
-        let value = interpreter.eval(ast);
+        let value = interpreter.eval(&ast);
 
         match value {
-            Ok(Type::Null) => (),
+            Ok(Value::Null) => (),
             Ok(v) if output => println!("{}", v.repr()),
             Err(err) => eprintln!("{err:?}"),
-            _ => ()
+            _ => (),
         }
     }
 }

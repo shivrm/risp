@@ -1,3 +1,11 @@
+//! This module parses RISP source code into abstract syntax trees
+//! (or ASTs). The [`Lexer`] is used to split the source code into
+//! [`Token`]s and the [`Parser`] processes these tokens into an
+//! [`AstNode`]. 
+//! 
+//! Invalid syntax may cause a [`SyntaxError`].
+
+
 mod lexer;
 mod parser;
 mod token;
@@ -12,10 +20,15 @@ pub use token::{Token, TokenKind};
 pub enum AstNode {
     Int(i32),
     Float(f64),
+
     Name(String),
+    Symbol(String),
+
     Str(String),
     Operator(super::shared::Op),
+
     Expr(Vec<AstNode>),
+    List(Vec<AstNode>),
 }
 
 pub struct SyntaxError(pub String);
